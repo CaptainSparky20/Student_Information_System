@@ -1,0 +1,167 @@
+{% extends 'adminportal/base_adminportal.html' %}
+{% load static %}
+
+{% block title %}Student List{% endblock %}
+
+{% block content_inner %}
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<div class="max-w-7xl mx-auto mt-10 p-6 bg-white/10 rounded-2xl shadow-lg backdrop-blur border border-white/20">
+
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-3xl font-bold text-white mb-6">Student List</h1>
+    <div class="flex gap-2">
+      <a href="{% url 'adminportal:add_student' %}"
+         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">
+        + Add Student
+      </a>
+      <a href="{% url 'adminportal:export_students' %}"
+         class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition">
+        Export CSV
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter Form -->
+  <form method="GET" class="flex flex-col md:flex-row gap-4 mb-8">
+    <!-- Department Dropdown -->
+    <div x-data="{ open: false, selected: '{{ request.GET.department|default:"" }}' }" class="relative w-48">
+      <button
+        @click="open = !open"
+        type="button"
+        class="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white flex justify-between items-center focus:outline-none"
+      >
+        <span x-text="selected ? ($refs.list.querySelector(`[data-value='${selected}']`)?.innerText || 'Select Department') : 'All Departments'"></span>
+        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      <div
+        x-show="open"
+        @click.away="open = false"
+        class="absolute z-30 mt-2 w-full bg-white/10 backdrop-blur border border-white/20 rounded-lg shadow-lg"
+        x-ref="list"
+        style="backdrop-filter: blur(6px);"
+      >
+        <button type="submit" name="department" value="" @click="selected = ''; open = false"
+          class="w-full text-left px-4 py-2 text-white bg-transparent hover:bg-white/20"
+        >All Departments</button>
+        {% for dept in departments %}
+          <button
+            type="submit"
+            name="department"
+            value="{{ dept.id }}"
+            data-value="{{ dept.id }}"
+            @click="selected = '{{ dept.id }}'; open = false"
+            :class="selected == '{{ dept.id }}' ? 'bg-white/20' : ''"
+            class="w-full text-left px-4 py-2 text-white bg-transparent hover:bg-white/20"
+          >{{ dept.name }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Class Group Dropdown -->
+    <div x-data="{ open: false, selected: '{{ request.GET.classgroup|default:"" }}' }" class="relative w-48">
+      <button
+        @click="open = !open"
+        type="button"
+        class="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white flex justify-between items-center focus:outline-none"
+      >
+        <span x-text="selected ? ($refs.list.querySelector(`[data-value='${selected}']`)?.innerText || 'Select Class Group') : 'All Class Groups'"></span>
+        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      <div
+        x-show="open"
+        @click.away="open = false"
+        class="absolute z-30 mt-2 w-full bg-white/10 backdrop-blur border border-white/20 rounded-lg shadow-lg"
+        x-ref="list"
+        style="backdrop-filter: blur(6px);"
+      >
+        <button type="submit" name="classgroup" value="" @click="selected = ''; open = false"
+          class="w-full text-left px-4 py-2 text-white bg-transparent hover:bg-white/20"
+        >All Class Groups</button>
+        {% for cg in classgroups %}
+          <button
+            type="submit"
+            name="classgroup"
+            value="{{ cg.id }}"
+            data-value="{{ cg.id }}"
+            @click="selected = '{{ cg.id }}'; open = false"
+            :class="selected == '{{ cg.id }}' ? 'bg-white/20' : ''"
+            class="w-full text-left px-4 py-2 text-white bg-transparent hover:bg-white/20"
+          >{{ cg.name }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Search box -->
+    <input
+      type="text"
+      name="q"
+      placeholder="Search by name or email..."
+      value="{{ request.GET.q }}"
+      class="md:w-72 px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 placeholder-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+    />
+    <button
+      type="submit"
+      class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
+    >Filter</button>
+  </form>
+
+  <!-- Table Section -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white/5 border border-white/10 rounded-xl text-white">
+      <thead class="bg-white/10 text-left text-sm uppercase font-semibold">
+        <tr>
+          <th class="p-4">#</th>
+          <th class="p-4">Name</th>
+          <th class="p-4">Email</th>
+          <th class="p-4">Department</th>
+          <th class="p-4">Course</th>
+          <th class="p-4">Class Group</th>
+          <th class="p-4">Date Joined</th>
+          <th class="p-4">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr class="border-t border-white/10 hover:bg-white/5 transition">
+          <td class="p-4">{{ forloop.counter }}</td>
+          <td class="p-4 font-medium">{{ student.get_full_name|default:"N/A" }}</td>
+          <td class="p-4">{{ student.email|default:"-" }}</td>
+          <td class="p-4">{{ student.department.name|default:"-" }}</td>
+          <td class="p-4">
+            {% with enrollments=student.student.enrollment_set.all %}
+              {% for enrollment in enrollments %}
+                {{ enrollment.class_group.course.name }}{% if not forloop.last %}, {% endif %}
+              {% empty %}
+                <span class="text-gray-400 italic">Not Enrolled</span>
+              {% endfor %}
+            {% endwith %}
+          </td>
+          <td class="p-4">
+            {% with enrollments=student.student.enrollment_set.all %}
+              {% for enrollment in enrollments %}
+                {{ enrollment.class_group.name }}{% if not forloop.last %}, {% endif %}
+              {% empty %}
+                <span class="text-gray-400 italic">-</span>
+              {% endfor %}
+            {% endwith %}
+          </td>
+          <td class="p-4">{{ student.date_joined|date:"Y-m-d" }}</td>
+          <td class="p-4 flex gap-2">
+            <a href="{% url 'adminportal:student_detail' student.pk %}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-semibold">
+              View
+            </a>
+            <a href="{% url 'adminportal:enroll_student' student.pk %}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold">
+              Join Class
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="p-4 text-center text-gray-400">No students found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

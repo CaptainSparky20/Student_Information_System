@@ -1,0 +1,119 @@
+{% extends 'adminportal/base_adminportal.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Edit Course{% endblock %}
+
+{% block content_inner %}
+<div class="max-w-3xl mx-auto mt-10 p-8 bg-white/10 rounded-2xl shadow-lg border border-white/20 backdrop-blur">
+  <h1 class="text-2xl font-bold text-white mb-6">Edit Course: {{ course.name }}</h1>
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="bg-red-700 text-white p-3 rounded mb-4">
+        {% for error in form.non_field_errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="grid grid-cols-1 gap-4">
+      {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="block text-white font-semibold mb-2">
+            {{ field.label }}{% if field.field.required %}<span class="text-red-400">*</span>{% endif %}
+          </label>
+          {% if field.errors %}
+            {{ field|add_class:"w-full p-3 rounded-lg bg-white/10 border-2 border-red-400 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+          {% else %}
+            {{ field|add_class:"w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+          {% endif %}
+          {% if field.help_text %}
+            <p class="text-xs text-gray-400">{{ field.help_text }}</p>
+          {% endif %}
+          {% for error in field.errors %}
+            <p class="text-sm text-red-400">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="flex gap-4 mt-8">
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition">Update Course</button>
+      <a href="{% url 'adminportal:course_list' %}" class="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg font-medium border border-white/20 transition">Cancel</a>
+    </div>
+  </form>
+
+  <!-- Class Groups: Each is like a "Form" or "Class" (e.g., Form 4 Amanah, 5 Science) -->
+  <div class="mt-12">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-white">Class Groups (Classes) for {{ course.name }}</h2>
+      <a href="{% url 'adminportal:add_classgroup' %}?course_id={{ course.pk }}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-medium text-sm">+ Add Class Group</a>
+    </div>
+    {% if course.classgroups.exists %}
+      <table class="w-full mb-4 bg-white/10 rounded-xl border border-white/20 text-white text-sm">
+        <thead>
+          <tr class="bg-white/10 uppercase">
+            <th class="p-2">Class Name</th>
+            <th class="p-2">Academic Year</th>
+            <th class="p-2">Lecturers</th>
+            <th class="p-2">Classroom</th>
+            <th class="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cg in course.classgroups.all %}
+          <tr class="border-t border-white/10">
+            <td class="p-2">{{ cg.name }}</td>
+            <td class="p-2">{{ cg.year }}</td>
+            <td class="p-2">
+              {% for lecturer in cg.lecturers.all %}
+                {{ lecturer.user.full_name }}{% if not forloop.last %}, {% endif %}
+              {% empty %}
+                <span class="text-gray-400">None</span>
+              {% endfor %}
+            </td>
+            <td class="p-2">{{ cg.classroom|default:"-" }}</td>
+            <td class="p-2 flex gap-2">
+              <a href="{% url 'adminportal:assign_lecturer_classgroup' cg.pk %}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-semibold">Assign Lecturers</a>
+              <a href="{% url 'adminportal:edit_classgroup' cg.pk %}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs font-semibold">Edit</a>
+              <!-- Optionally add delete button here -->
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <span class="text-gray-400">No class groups (forms/classes) for this course.</span>
+    {% endif %}
+  </div>
+
+  <!-- Subjects: Academic subjects linked to this course -->
+  <div class="mt-10">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-white">Subjects for {{ course.name }}</h2>
+      <a href="{% url 'adminportal:add_subject' %}?course_id={{ course.pk }}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-medium text-sm">+ Add Subject</a>
+    </div>
+    {% if course.subjects.exists %}
+      <table class="w-full bg-white/10 rounded-xl border border-white/20 text-white text-sm">
+        <thead>
+          <tr class="bg-white/10 uppercase">
+            <th class="p-2">Subject Name</th>
+            <th class="p-2">Subject Code</th>
+            <th class="p-2">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for subject in course.subjects.all %}
+          <tr class="border-t border-white/10">
+            <td class="p-2">{{ subject.name }}</td>
+            <td class="p-2">{{ subject.code }}</td>
+            <td class="p-2">{{ subject.description|default:"-" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <span class="text-gray-400">No subjects for this course.</span>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

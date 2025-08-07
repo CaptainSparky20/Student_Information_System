@@ -1,0 +1,71 @@
+{% extends 'adminportal/base_adminportal.html' %}
+{% load static %}
+
+{% block title %}Add New Lecturer{% endblock %}
+
+{% block content_inner %}
+<div class="max-w-3xl mx-auto bg-white/10 rounded-2xl p-8 border border-white/20 shadow-xl mt-10">
+  <h1 class="text-3xl font-bold text-white mb-6 text-center">Add New Lecturer</h1>
+  <form method="post" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+    {{ lecturer_form.non_field_errors }}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        {{ lecturer_form.full_name.label_tag }}<span class="text-red-400">*</span>
+        {{ lecturer_form.full_name }}
+        {{ lecturer_form.full_name.errors }}
+      </div>
+      <div>
+        {{ lecturer_form.short_name.label_tag }}<span class="text-red-400">*</span>
+        {{ lecturer_form.short_name }}
+        {{ lecturer_form.short_name.errors }}
+      </div>
+      <div>
+        {{ lecturer_form.identity_card_number.label_tag }}<span class="text-red-400">*</span>
+        {{ lecturer_form.identity_card_number }}
+        {{ lecturer_form.identity_card_number.errors }}
+      </div>
+      <div>
+        {{ lecturer_form.email.label_tag }}<span class="text-red-400">*</span>
+        {{ lecturer_form.email }}
+        {{ lecturer_form.email.errors }}
+      </div>
+      <div>
+        {{ lecturer_form.password.label_tag }}<span class="text-red-400">*</span>
+        {{ lecturer_form.password }}
+        {{ lecturer_form.password.errors }}
+      </div>
+      <div>
+        {{ lecturer_form.department.label_tag }}<span class="text-red-400">*</span>
+        {{ lecturer_form.department }}
+        {{ lecturer_form.department.errors }}
+      </div>
+      <div>
+        {{ lecturer_form.profile_picture.label_tag }}
+        {{ lecturer_form.profile_picture }}
+        {{ lecturer_form.profile_picture.errors }}
+      </div>
+      <div>
+        {{ lecturer_form.phone_number.label_tag }}
+        {{ lecturer_form.phone_number }}
+        {{ lecturer_form.phone_number.errors }}
+      </div>
+      <div>
+        {{ lecturer_form.date_joined.label_tag }}<span class="text-red-400">*</span>
+        {{ lecturer_form.date_joined }}
+        {{ lecturer_form.date_joined.errors }}
+      </div>
+      <div class="md:col-span-2">
+        {{ lecturer_form.address.label_tag }}
+        {{ lecturer_form.address }}
+        {{ lecturer_form.address.errors }}
+      </div>
+    </div>
+
+    <button type="submit" class="w-full py-3 mt-8 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-lg transition-all text-lg">
+      Add Lecturer
+    </button>
+  </form>
+</div>
+{% endblock %}

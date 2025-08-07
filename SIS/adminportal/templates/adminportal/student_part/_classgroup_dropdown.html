@@ -1,0 +1,5 @@
+{{ form.class_group.label_tag }}
+{{ form.class_group|add_class:"" }}
+{% if form.class_group.errors %}
+  <p class="text-red-400 text-xs mt-1">{{ form.class_group.errors.0 }}</p>
+{% endif %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+  <style>
+    body.glass .glass-card {
+      background: rgba(255,255,255,0.06) !important;
+      box-shadow: 0 4px 32px 0 rgba(0,0,0,0.17);
+      border-color: rgba(255,255,255,0.18) !important;
+    }
+  </style>
+  <script>
+    function toggleTheme(mode) {
+      if(mode === 'dark') {
+        document.body.classList.add('dark');
+        localStorage.setItem('theme','dark');
+      } else if(mode === 'light') {
+        document.body.classList.remove('dark');
+        localStorage.setItem('theme','light');
+      } else if(mode === 'glass') {
+        document.body.classList.toggle('glass');
+        localStorage.setItem('glass',document.body.classList.contains('glass') ? '1' : '');
+      }
+    }
+    window.onload = function() {
+      if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark');
+      if(localStorage.getItem('glass')==='1') document.body.classList.add('glass');
+    }
+  </script>
+{% endblock %}
+
+{% block content %}
+  {% include "partials/_topbar.html" %}
+  <main class="max-w-7xl mx-auto px-4 py-8">
+    {% if request.user.role == "ADMIN" %}
+      {% include "dashboard/partials/admin_part/admin_dashboard_content.html" %}
+    {% elif request.user.role == "LECTURER" %}
+      {% include "dashboard/partials/lecturer_part/lecturer_dashboard_content.html" %}
+    {% elif request.user.role == "STUDENT" %}
+      {% include "dashboard/partials/student_part/student_dashboard_content.html" %}
+    {% else %}
+      <p class="text-center text-gray-400">Unauthorized access or role not set.</p>
+    {% endif %}
+  </main>
+{% endblock %}

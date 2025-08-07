@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Details - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1 class="text-4xl font-bold text-white mb-2">Attendance Details</h1>
+    <p class="text-xl text-gray-300">{{ course.name }} ({{ course.code }})</p>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 text-white shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-blue-100 text-sm font-medium">Total Classes</p>
+          <p class="text-3xl font-bold">{{ total_classes }}</p>
+        </div>
+        <div class="bg-white/20 rounded-full p-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-6 text-white shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-green-100 text-sm font-medium">Classes Attended</p>
+          <p class="text-3xl font-bold">{{ attended_classes }}</p>
+        </div>
+        <div class="bg-white/20 rounded-full p-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl p-6 text-white shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-purple-100 text-sm font-medium">Attendance Rate</p>
+          <p class="text-3xl font-bold">{{ attendance_percentage }}%</p>
+        </div>
+        <div class="bg-white/20 rounded-full p-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-br from-red-600 to-red-700 rounded-2xl p-6 text-white shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-red-100 text-sm font-medium">Absences</p>
+          <p class="text-3xl font-bold">{{ absences }}</p>
+        </div>
+        <div class="bg-white/20 rounded-full p-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance Records -->
+  <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
+    <h2 class="text-2xl font-semibold text-white mb-6">Attendance Records</h2>
+    
+    {% if attendance_records %}
+      <div class="overflow-hidden rounded-xl border border-white/20">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-white/5">
+              <tr>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">Date</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">Status</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">Remarks</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/10">
+              {% for record in attendance_records %}
+              <tr class="hover:bg-white/5 transition-colors">
+                <td class="px-6 py-4 text-white">{{ record.date|date:"M d, Y" }}</td>
+                <td class="px-6 py-4">
+                  {% if record.status == 'present' %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      ✔ Present
+                    </span>
+                  {% elif record.status == 'absent' %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      ✘ Absent
+                    </span>
+                  {% elif record.status == 'late' %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      ⏰ Late
+                    </span>
+                  {% elif record.status == 'excused' %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      ✓ Excused
+                    </span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-4 text-gray-300">{{ record.remarks|default:"-" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% else %}
+      <div class="text-center py-12">
+        <div class="bg-white/5 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+          <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-white mb-2">No Records Found</h3>
+        <p class="text-gray-400">No attendance records are available for this course.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Back Button -->
+  <div class="text-center">
+    <a href="{% url 'student:dashboard' %}" 
+       class="inline-flex items-center px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all duration-300 border border-white/20">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Back to Dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}

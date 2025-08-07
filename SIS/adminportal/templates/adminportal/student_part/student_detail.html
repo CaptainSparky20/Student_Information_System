@@ -1,0 +1,154 @@
+{% extends 'adminportal/base_adminportal.html' %}
+{% load static %}
+
+{% block title %}Student Details{% endblock %}
+
+{% block content_inner %}
+<div class="max-w-3xl mx-auto mt-10 bg-white/10 rounded-2xl shadow-lg p-8 border border-white/20 space-y-8">
+  <!-- Profile section -->
+  <div class="flex flex-col md:flex-row items-center gap-8">
+    <div>
+      {% if student_profile.profile_picture %}
+        <img src="{{ student_profile.profile_picture.url }}" alt="Profile Picture"
+             class="w-36 h-36 rounded-full object-cover border-4 border-white/20 shadow-lg">
+      {% else %}
+        <div class="w-36 h-36 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-4 border-white/20 shadow-lg text-3xl font-bold text-white">
+          {{ student_profile.user.full_name|slice:":1" }}
+        </div>
+      {% endif %}
+    </div>
+    <div class="flex-1 space-y-2">
+      <h2 class="text-3xl font-bold text-white mb-1">{{ student_profile.user.full_name }}</h2>
+      <p class="text-lg text-gray-300 mb-2">IC: <span class="font-mono">{{ student_profile.user.identity_card_number }}</span></p>
+      <p class="text-gray-300">
+        Last Online: 
+        {% if student_profile.latest_activity %}
+          <span class="font-mono">{{ student_profile.latest_activity|date:"Y-m-d H:i" }}</span>
+        {% else %}
+          <span class="italic text-gray-400">Never</span>
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- Contact Info -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/10 p-6 rounded-xl border border-white/20">
+    <div>
+      <h3 class="text-lg font-semibold text-white mb-2">Contact Info</h3>
+      <p><span class="font-semibold text-gray-300">Email:</span> {{ student_profile.user.email }}</p>
+      <p><span class="font-semibold text-gray-300">Phone:</span> {{ student_profile.phone_number|default:"-" }}</p>
+      <p><span class="font-semibold text-gray-300">Address:</span> {{ student_profile.address|default:"-" }}</p>
+      <p><span class="font-semibold text-gray-300">Date of Birth:</span> 
+        {{ student_profile.date_of_birth|date:"Y-m-d"|default:"-" }}</p>
+    </div>
+    <div>
+      <h3 class="text-lg font-semibold text-white mb-2">Emergency Contact</h3>
+      <p><span class="font-semibold text-gray-300">Name:</span> {{ student_profile.emergency_name|default:"-" }}</p>
+      <p><span class="font-semibold text-gray-300">Relation:</span> {{ student_profile.emergency_relation|default:"-" }}</p>
+      <p><span class="font-semibold text-gray-300">Phone:</span> {{ student_profile.emergency_phone|default:"-" }}</p>
+    </div>
+  </div>
+
+  <!-- Parent/Guardian(s) -->
+  <div class="bg-white/10 rounded-xl p-6 border border-white/20">
+    <h3 class="text-lg font-semibold text-white mb-2">Parent/Guardian(s)</h3>
+    {% if student_profile.parents.exists %}
+      <ul class="space-y-2">
+        {% for parent in student_profile.parents.all %}
+          <li>
+            <span class="font-semibold">{{ parent.user.full_name }}</span> 
+            <span class="text-gray-400 ml-1">({{ parent.get_roles_list|join:", " }})</span>
+            <span class="text-gray-300 ml-2">Phone: {{ parent.phone_number|default:"-" }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <span class="italic text-gray-400">No parent/guardian info.</span>
+    {% endif %}
+  </div>
+
+  <!-- Class Membership -->
+<div class="bg-white/10 rounded-xl p-6 border border-white/20">
+  <h3 class="text-lg font-semibold text-white mb-2">Class Membership</h3>
+  {% if enrollments %}
+    <ul class="space-y-4">
+      {% for enrollment in enrollments %}
+        <li class="border-b border-white/10 pb-2">
+          <div>
+            <span class="font-semibold text-white">Class Group:</span>
+            <span class="text-blue-200">{{ enrollment.class_group.name }}</span>
+            <span class="ml-2 text-gray-400">({{ enrollment.class_group.year }})</span>
+            {% if enrollment.class_group.classroom %}
+              <span class="ml-2 text-gray-400">Classroom: {{ enrollment.class_group.classroom }}</span>
+            {% endif %}
+          </div>
+          <div>
+            <span class="font-semibold text-white">Course:</span>
+            <span class="text-blue-200">{{ enrollment.class_group.course.name }}</span>
+          </div>
+          <div>
+            <span class="font-semibold text-white">Lecturer(s):</span>
+            {% if enrollment.class_group.lecturers.exists %}
+              <span class="text-blue-200">
+                {% for lecturer in enrollment.class_group.lecturers.all %}
+                  {{ lecturer.user.full_name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              </span>
+            {% else %}
+              <span class="text-gray-400 italic">No lecturer assigned</span>
+            {% endif %}
+          </div>
+          <div>
+            <span class="font-semibold text-white">Enrolled on:</span>
+            <span class="text-gray-300">{{ enrollment.date_enrolled|date:"Y-m-d" }}</span>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <span class="italic text-gray-400">Not enrolled in any class group.</span>
+  {% endif %}
+</div>
+
+
+  <!-- Achievements -->
+  <div class="bg-white/10 rounded-xl p-6 border border-white/20">
+    <h3 class="text-lg font-semibold text-white mb-2">Achievements</h3>
+    {% if student_profile.achievements.exists %}
+      <ul class="space-y-2">
+        {% for achievement in student_profile.achievements.all %}
+          <li>
+            <span class="font-semibold">{{ achievement.title }}</span>
+            <span class="ml-2 text-gray-300">({{ achievement.date_awarded|date:"Y-m-d" }})</span>
+            {% if achievement.description %}
+              <div class="ml-2 text-gray-400">{{ achievement.description }}</div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <span class="italic text-gray-400">No achievements recorded.</span>
+    {% endif %}
+  </div>
+
+  <!-- Disciplinary Actions -->
+  <div class="bg-white/10 rounded-xl p-6 border border-white/20">
+    <h3 class="text-lg font-semibold text-white mb-2">Disciplinary Actions</h3>
+    {% if student_profile.disciplinary_actions.exists %}
+      <ul class="space-y-2">
+        {% for action in student_profile.disciplinary_actions.all %}
+          <li>
+            <span class="font-semibold">{{ action.action }}</span>
+            <span class="ml-2 text-gray-300">({{ action.date|date:"Y-m-d" }})</span>
+            {% if action.description %}
+              <div class="ml-2 text-gray-400">{{ action.description }}</div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <span class="italic text-gray-400">No disciplinary actions.</span>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

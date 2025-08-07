@@ -1,0 +1,73 @@
+{% extends 'adminportal/base_adminportal.html' %}
+{% load static %}
+
+{% block title %}Courses{% endblock %}
+
+{% block content_inner %}
+<div class="max-w-4xl mx-auto mt-10 p-8 bg-white/10 rounded-2xl shadow-lg border border-white/20 backdrop-blur">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-white">All Courses</h1>
+    <div class="flex gap-2">
+      <a href="{% url 'adminportal:add_course' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition">+ Add Course</a>
+      <a href="{% url 'adminportal:export_courses' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">Export CSV</a>
+    </div>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white/5 border border-white/10 rounded-xl text-white">
+      <thead class="bg-white/10 text-left text-sm uppercase font-semibold">
+        <tr>
+          <th class="p-4">#</th>
+          <th class="p-4">Course Name</th>
+          <th class="p-4">Code</th>
+          <th class="p-4">Class Groups</th>
+          <th class="p-4">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for course in courses %}
+        <tr class="border-t border-white/10 hover:bg-white/5 transition">
+          <td class="p-4">{{ forloop.counter }}</td>
+          <td class="p-4 font-medium">{{ course.name }}</td>
+          <td class="p-4">{{ course.code }}</td>
+          <td class="p-4">
+            {% if course.classgroups.all %}
+              <ul class="space-y-2">
+                {% for cg in course.classgroups.all %}
+                  <li class="mb-2 pb-2 border-b border-white/10 last:border-0">
+                    <span class="font-semibold">{{ cg.name }}</span>
+                    <span class="ml-1 text-xs text-gray-400">({{ cg.year }})</span>
+                    <br>
+                    <span class="text-gray-300 text-xs">Lecturers:</span>
+                    {% for lecturer in cg.lecturers.all %}
+                      {{ lecturer.user.full_name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                      <span class="text-gray-400">None</span>
+                    {% endfor %}
+                    <span class="ml-2 text-gray-300 text-xs">Classroom:</span> {{ cg.classroom|default:"-" }}
+                    <br>
+                    <a href="{% url 'adminportal:assign_lecturer_classgroup' cg.pk %}" class="inline-block mt-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition text-xs font-semibold">
+                      Assign Lecturers
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <span class="text-gray-400">No class groups</span>
+            {% endif %}
+          </td>
+          <td class="p-4 flex gap-2">
+            <a href="{% url 'adminportal:edit_course' course.pk %}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded transition text-xs font-semibold">
+              Edit
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="p-4 text-center text-gray-400">No courses found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

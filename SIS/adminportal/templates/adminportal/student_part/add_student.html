@@ -1,0 +1,178 @@
+{% extends 'adminportal/base_adminportal.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Add New Student{% endblock %}
+
+{% block content_inner %}
+<div class="max-w-3xl mx-auto bg-white/10 backdrop-blur-md rounded-2xl p-10 border border-white/20 shadow-xl mt-12">
+  <h1 class="text-3xl font-extrabold text-white mb-8 text-center select-none">Add New Student</h1>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-8">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="mb-4">
+        {% for error in form.non_field_errors %}
+          <div class="bg-red-600 text-white rounded p-2 mb-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Identity Details -->
+    <fieldset class="border border-white/30 rounded-lg p-6 bg-white/5">
+      <legend class="text-lg font-semibold text-white mb-4 px-2">Identity Details <span class="text-red-400">*</span></legend>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          {{ form.identity_card_number.label_tag }}
+          {{ form.identity_card_number }}
+          {% if form.identity_card_number.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.identity_card_number.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div>
+          {{ form.email.label_tag }}
+          {{ form.email }}
+          {% if form.email.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.email.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div>
+          {{ form.password.label_tag }}
+          {{ form.password }}
+          {% if form.password.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.password.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div>
+          {{ form.confirm_password.label_tag }}
+          {{ form.confirm_password }}
+          {% if form.confirm_password.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.confirm_password.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Personal Info -->
+    <fieldset class="border border-white/30 rounded-lg p-6 bg-white/5">
+      <legend class="text-lg font-semibold text-white mb-4 px-2">Personal Info</legend>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          {{ form.full_name.label_tag }}
+          {{ form.full_name }}
+          {% if form.full_name.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.full_name.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div>
+          {{ form.short_name.label_tag }}
+          {{ form.short_name }}
+          {% if form.short_name.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.short_name.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div>
+          {{ form.phone_number.label_tag }}
+          {{ form.phone_number }}
+          {% if form.phone_number.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.phone_number.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div>
+          {{ form.date_of_birth.label_tag }}
+          {{ form.date_of_birth }}
+          {% if form.date_of_birth.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.date_of_birth.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div class="md:col-span-2">
+          {{ form.address.label_tag }}
+          {{ form.address|add_class:"" }}
+          {% if form.address.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.address.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div class="md:col-span-2">
+          {{ form.profile_picture.label_tag }}
+          {{ form.profile_picture|add_class:"" }}
+          {% if form.profile_picture.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.profile_picture.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Academic Assignment -->
+    <fieldset class="border border-white/30 rounded-lg p-6 bg-white/5">
+      <legend class="text-lg font-semibold text-white mb-4 px-2">Academic Details</legend>
+      <div class="grid grid-cols-1 gap-6">
+        <!-- Department Dropdown -->
+        <div>
+          {{ form.department.label_tag }}
+          <select
+            name="department"
+            id="id_department"
+            class="w-full px-4 py-3 rounded-lg bg-gray-50 text-black font-medium border border-white/20 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+            hx-get="{% url 'adminportal:get_classgroups_by_department' %}"
+            hx-target="#class-group-select"
+            hx-trigger="change"
+          >
+            <option value="">Select Department</option>
+            {% for dept in form.fields.department.queryset %}
+              <option value="{{ dept.pk }}"{% if form.department.value|stringformat:"s" == dept.pk|stringformat:"s" %} selected{% endif %}>{{ dept.name }}</option>
+            {% endfor %}
+          </select>
+          {% if form.department.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.department.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <!-- Class Group Dropdown (HTMX target) -->
+        <div id="class-group-select">
+          {{ form.class_group.label_tag }}
+          {{ form.class_group|add_class:"" }}
+          {% if form.class_group.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.class_group.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Emergency Contact -->
+    <fieldset class="border border-white/30 rounded-lg p-6 bg-white/5">
+      <legend class="text-lg font-semibold text-white mb-4 px-2">Emergency Contact (Optional)</legend>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          {{ form.emergency_name.label_tag }}
+          {{ form.emergency_name }}
+          {% if form.emergency_name.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.emergency_name.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div>
+          {{ form.emergency_relation.label_tag }}
+          {{ form.emergency_relation }}
+          {% if form.emergency_relation.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.emergency_relation.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div class="md:col-span-2">
+          {{ form.emergency_phone.label_tag }}
+          {{ form.emergency_phone }}
+          {% if form.emergency_phone.errors %}
+            <p class="text-red-400 text-xs mt-1">{{ form.emergency_phone.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </fieldset>
+
+    <button type="submit" class="w-full py-4 mt-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-lg transition-colors text-lg">
+      Add Student
+    </button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+{% endblock %}
