@@ -1,24 +1,43 @@
 {% extends "student/base_student.html" %}
 {% load static %}
+
 {% block content_inner %}
-<div class="max-w-4xl mx-auto bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-  <h2 class="text-2xl font-semibold text-white mb-4">My Classmates — {{ class_group.name }}</h2>
-  <ul class="divide-y divide-white/10">
-    {% for s in classmates %}
-      <li class="py-3 flex items-center gap-4">
-        {% if s.profile_picture %}
-          <img src="{{ s.profile_picture.url }}" class="w-10 h-10 rounded-full object-cover border border-white/20" />
-        {% else %}
-          <img src="{% static 'img/avatar.png' %}" class="w-10 h-10 rounded-full object-cover border border-white/20" />
-        {% endif %}
-        <div class="flex-1">
-          <div class="text-white font-medium">{{ s.user.get_full_name }}</div>
-          <div class="text-gray-400 text-sm">{{ s.user.email }}</div>
-        </div>
-      </li>
-    {% empty %}
-      <li class="py-6 text-gray-400">No classmates found.</li>
-    {% endfor %}
-  </ul>
+<div class="max-w-3xl mx-auto">
+  <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+    <h2 class="text-xl font-semibold text-white">
+      My Classmates{% if class_group %} — {{ class_group.name }}{% endif %}
+      <span class="ml-2 text-sm text-gray-400">({{ classmates|length }})</span>
+    </h2>
+
+    <ul class="mt-4 divide-y divide-white/10">
+      {% for s in classmates %}
+        <li class="py-3 flex items-center gap-3">
+          {% if s.profile_picture %}
+            <img src="{{ s.profile_picture.url }}" alt="{{ s.user.get_full_name|default:'Student' }}"
+                 class="w-10 h-10 rounded-full object-cover border border-white/20" loading="lazy">
+          {% elif s.user.profile_picture %}
+            <img src="{{ s.user.profile_picture.url }}" alt="{{ s.user.get_full_name|default:'Student' }}"
+                 class="w-10 h-10 rounded-full object-cover border border-white/20" loading="lazy">
+          {% else %}
+            <div class="w-10 h-10 rounded-full bg-white/10 grid place-items-center border border-white/20">
+              <span class="text-white text-sm font-semibold">
+                {{ s.user.get_full_name|default:s.user.email|slice:":1"|upper }}
+              </span>
+            </div>
+          {% endif %}
+
+          <div class="flex-1 min-w-0">
+            <div class="text-white font-medium truncate">
+              {{ s.user.get_full_name|default:"Unnamed Student" }}
+              {% if s.user_id == request.user.id %}<span class="text-xs text-gray-400">(you)</span>{% endif %}
+            </div>
+            <div class="text-gray-400 text-sm truncate">{{ s.user.email }}</div>
+          </div>
+        </li>
+      {% empty %}
+        <li class="py-6 text-gray-400">No classmates found.</li>
+      {% endfor %}
+    </ul>
+  </div>
 </div>
 {% endblock %}

@@ -1,34 +1,36 @@
 {% load static %}
 {% block content %}
 <!-- Admin Top Navigation Header -->
-<div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/20 dark:border-white/10 shadow-xl mb-8">
+<div class="relative z-[9999] bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/20 dark:border-white/10 shadow-xl mb-8">
   <div class="flex justify-between items-center">
     <!-- Logo and Clickable Dashboard Title -->
     <div class="flex items-center space-x-4">
       <img src="{% static 'images/breyer.jpg' %}" alt="Breyer Logo" class="h-12 w-auto">
       <div>
         <a href="{% url 'dashboard:main_dashboard' %}" class="text-2xl font-bold text-white hover:text-blue-400 transition">
-  {% if request.user.role == 'ADMIN' %}
-    Admin Dashboard
-  {% elif request.user.role == 'LECTURER' %}
-    Lecturer Dashboard
-  {% elif request.user.role == 'STUDENT' %}
-    Student Dashboard
-  {% else %}
-    Dashboard
-  {% endif %}
-</a>
-
+          {% if request.user.role == 'ADMIN' %}
+            Admin Dashboard
+          {% elif request.user.role == 'LECTURER' %}
+            Lecturer Dashboard
+          {% elif request.user.role == 'STUDENT' %}
+            Student Dashboard
+          {% else %}
+            Dashboard
+          {% endif %}
+        </a>
         <p class="text-gray-300 text-sm">{{ request.user.get_full_name|default:request.user.email }}</p>
       </div>
     </div>
+
     <!-- Live Date/Time and Profile -->
     <div class="flex items-center space-x-6">
       <div class="text-right">
         <p class="text-white font-medium" id="current-date"></p>
         <p class="text-gray-300 text-sm" id="current-time"></p>
       </div>
-      <div class="relative">
+
+      <!-- Profile Menu Wrapper -->
+      <div class="relative z-[99999]">
         <button id="profile-btn" onclick="toggleProfileMenu(event)" class="relative group focus:outline-none">
           {% if request.user.profile_picture %}
             <img src="{{ request.user.profile_picture.url }}" alt="Profile Picture"
@@ -42,12 +44,13 @@
           {% endif %}
           <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
         </button>
-        <!-- Profile Dropdown - extra transparent glassmorphism style, fixed z-index -->
+
+        <!-- Profile Dropdown -->
         <div id="profile-menu" class="hidden absolute right-0 top-14 w-56 rounded-2xl
           bg-white/15 dark:bg-white/10
           border border-white/20 dark:border-white/10
           shadow-2xl ring-1 ring-black/10
-          backdrop-blur-xl overflow-hidden z-[2147483647] transition-all">
+          backdrop-blur-xl overflow-hidden z-[999999] transition-all">
           <a href="{% url 'dashboard:profile' %}" class="flex items-center px-4 py-3 hover:bg-white/20 dark:hover:bg-white/10 text-gray-900 dark:text-white transition">
             {% include "lucide/user.svg" %}<span class="ml-2">My Profile</span>
           </a>
@@ -68,6 +71,7 @@
     </div>
   </div>
 </div>
+
 <script>
   function updateDateTime() {
     const now = new Date();
@@ -91,6 +95,5 @@
     }
   });
 </script>
-{% block adminportal_content %}
-{% endblock %}
+{% block adminportal_content %}{% endblock %}
 {% endblock %}
