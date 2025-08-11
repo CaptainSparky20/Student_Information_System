@@ -1,11 +1,16 @@
-{% extends "dashboard/base_dashboard.html" %}
-{% block dashboard_content %}
+{% extends "student/base_student.html" %}
+{% load static %}
+{% block content_inner %}
 <div class="max-w-4xl mx-auto bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
   <h2 class="text-2xl font-semibold text-white mb-4">My Classmates — {{ class_group.name }}</h2>
   <ul class="divide-y divide-white/10">
     {% for s in classmates %}
       <li class="py-3 flex items-center gap-4">
-        <img src="{{ s.profile_picture.url if s.profile_picture else static 'img/avatar.png' }}" class="w-10 h-10 rounded-full object-cover border border-white/20" />
+        {% if s.profile_picture %}
+          <img src="{{ s.profile_picture.url }}" class="w-10 h-10 rounded-full object-cover border border-white/20" />
+        {% else %}
+          <img src="{% static 'img/avatar.png' %}" class="w-10 h-10 rounded-full object-cover border border-white/20" />
+        {% endif %}
         <div class="flex-1">
           <div class="text-white font-medium">{{ s.user.get_full_name }}</div>
           <div class="text-gray-400 text-sm">{{ s.user.email }}</div>
