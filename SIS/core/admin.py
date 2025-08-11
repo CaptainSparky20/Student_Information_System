@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Lecturer, Student, Course, Subject, ClassGroup,
     Enrollment, Attendance,
-    StudentAchievement, DisciplinaryAction, Department
+    StudentAchievement, DisciplinaryAction, Department, Parent
 )
 
 # ---------- Lecturer ----------
@@ -96,3 +96,9 @@ class DisciplinaryActionAdmin(admin.ModelAdmin):
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ('name',)
+
+# ---------- Parent ----------
+@admin.register(Parent)
+class ParentAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "email", "phone_number", "occupation")
+    search_fields = ("full_name", "email", "phone_number")

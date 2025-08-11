@@ -89,6 +89,10 @@ class StudentExtraProfileForm(forms.ModelForm):
 
 
 # --- Parent/Emergency Info Form ---
+# core/forms.py
+from django import forms
+from .models import Parent
+
 class ParentForm(forms.ModelForm):
     roles = forms.CharField(
         required=False,
@@ -99,12 +103,13 @@ class ParentForm(forms.ModelForm):
     class Meta:
         model = Parent
         fields = [
-            'user',            
+            'full_name',
+            'email',
             'profile_picture',
             'phone_number',
             'address',
             'occupation',
-            'roles',         
+            'roles',
         ]
         widgets = {
             'profile_picture': forms.FileInput(),

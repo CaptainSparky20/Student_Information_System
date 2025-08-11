@@ -22,6 +22,8 @@ from .forms import AttendanceForm, MessageForm, AttendanceHistoryFilterForm
 from core.models import ClassGroup
 from .forms import DisciplinaryActionForm
 from .forms import StudentAchievementForm
+from core.forms import ParentForm
+
 #==============================================================
 # CLASS GROUP STUDENT LIST
 # ==============================================================
@@ -491,6 +493,81 @@ def update_student_activity(request, student_id):
     messages.success(request, f"Updated latest activity for {student.user.get_full_name()}.")
     return redirect('lecturer:student_full_details', student_id=student.id)
 
+# ==============================================================
+# ADD EMERGENCY CONTACT DETAILS 
+# ==============================================================
+@role_required(CustomUser.Role.LECTURER)
+def add_parent_details(request, student_id):
+    lecturer = get_object_or_404(Lecturer, user=request.user)
+    student = get_object_or_404(Student, pk=student_id)
+
+    if not ClassGroup.objects.filter(pk=student.class_group_id, lecturers=lecturer).exists():
+        return HttpResponseForbidden("You are not authorized to manage this student.")
+
+    if request.method == "POST":
+        form = ParentForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Basic de-dup: try name + phone
+            full_name = (form.cleaned_data.get("full_name") or "").strip()
+            phone = (form.cleaned_data.get("phone_number") or "").strip()
+            qs = Parent.objects.filter(full_name__iexact=full_name)
+            if phone:
+                qs = qs.filter(phone_number__iexact=phone)
+            parent = qs.first() or form.save()
+
+            if not student.parents.filter(pk=parent.pk).exists():
+                student.parents.add(parent)
+                messages.success(request, "Parent/guardian saved and linked to the student.")
+            else:
+                messages.info(request, "This parent/guardian is already linked.")
+            return redirect("lecturer:manage_parents", student_id=student.id)
+        messages.error(request, "Please correct the errors below.")
+    else:
+        form = ParentForm()
+
+    return render(request, "lecturer/add_parent_details.html", {"student": student, "form": form})
+
+
+
+@role_required(CustomUser.Role.LECTURER)
+def manage_parents(request, student_id):
+    """
+    Simple page to review all linked parents/guardians for a student
+    and provide a remove action.
+    """
+    lecturer = get_object_or_404(Lecturer, user=request.user)
+    student = get_object_or_404(Student, pk=student_id)
+
+    if not ClassGroup.objects.filter(pk=student.class_group_id, lecturers=lecturer).exists():
+        return HttpResponseForbidden("You are not authorized to view this page.")
+
+    parents = student.parents.select_related("user")
+    return render(request, "lecturer/manage_parents.html", {
+        "student": student,
+        "parents": parents,
+    })
+
+
+@role_required(CustomUser.Role.LECTURER)
+def remove_parent(request, student_id, parent_id):
+    """
+    Unlink a parent/guardian from the student (doesn't delete the Parent profile).
+    """
+    lecturer = get_object_or_404(Lecturer, user=request.user)
+    student = get_object_or_404(Student, pk=student_id)
+    parent = get_object_or_404(Parent, pk=parent_id)
+
+    if not ClassGroup.objects.filter(pk=student.class_group_id, lecturers=lecturer).exists():
+        return HttpResponseForbidden("You are not authorized to perform this action.")
+
+    if request.method == "POST":
+        student.parents.remove(parent)
+        messages.success(request, "Parent/guardian unlinked from the student.")
+        return redirect("lecturer:manage_parents", student_id=student.id)
+
+    # Gentle fallback (optional confirm page). You can skip and always POST from a button.
+    messages.error(request, "Invalid request method.")
+    return redirect("lecturer:manage_parents", student_id=student.id)
 # ==============================================================
 # MESSAGING, EXPORTS, UTILITIES
 # ==============================================================

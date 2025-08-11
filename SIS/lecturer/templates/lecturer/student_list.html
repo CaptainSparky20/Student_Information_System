@@ -31,7 +31,8 @@
 
   {% if students %}
     <div class="overflow-x-auto">
-      <table class="min-w-full bg-white/5 border border-white/20 rounded-xl text-white">
+      <!-- table-auto lets columns size to the longest content naturally -->
+      <table class="min-w-full table-auto bg-white/5 border border-white/20 rounded-xl text-white">
         <thead class="bg-white/10 text-left text-sm uppercase font-semibold">
           <tr>
             <th class="p-4">#</th>
@@ -47,7 +48,7 @@
         <tbody>
           {% for student in students %}
             <tr class="border-t border-white/10 hover:bg-blue-800/10 transition">
-              <td class="p-4">{{ forloop.counter }}</td>
+              <td class="p-4 whitespace-nowrap">{{ forloop.counter }}</td>
               <td class="p-4">
                 {% if student.profile_picture %}
                   <img src="{{ student.profile_picture.url }}" alt="Profile"
@@ -58,8 +59,9 @@
                   </div>
                 {% endif %}
               </td>
-              <td class="p-4 font-medium">{{ student.user.get_full_name }}</td>
-              <td class="p-4">
+              <!-- Let name and email fit content without over-widening the table -->
+              <td class="p-4 font-medium whitespace-nowrap">{{ student.user.get_full_name }}</td>
+              <td class="p-4 whitespace-nowrap">
                 <a href="mailto:{{ student.user.email }}" class="inline-block bg-blue-800/20 px-2 py-1 rounded text-blue-200 font-mono hover:underline">
                   {{ student.user.email }}
                 </a>
@@ -75,27 +77,43 @@
                   {% endfor %}
                 {% endwith %}
               </td>
-              <td class="p-4">{{ student.user.date_joined|date:"M d, Y" }}</td>
-              <td class="p-4">
+              <td class="p-4 whitespace-nowrap">{{ student.user.date_joined|date:"M d, Y" }}</td>
+              <td class="p-4 whitespace-nowrap">
                 {% if student.user.is_active %}
                   <span class="inline-block px-2 py-1 rounded bg-green-700/40 text-green-200 text-xs">Active</span>
                 {% else %}
                   <span class="inline-block px-2 py-1 rounded bg-red-700/40 text-red-200 text-xs">Inactive</span>
                 {% endif %}
               </td>
-              <td class="p-4 text-center flex flex-col gap-2 md:flex-row md:gap-2 justify-center items-center">
-                <a href="{% url 'lecturer:student_full_details' student.user.id %}"
-                   class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-semibold transition">
-                  View
-                </a>
-                <a href="{% url 'lecturer:student_achievements' student.id %}"
-                   class="bg-purple-700 hover:bg-purple-800 text-white px-3 py-1 rounded text-xs font-semibold transition">
-                  Achievements
-                </a>
-                <a href="{% url 'lecturer:take_disciplinary_action' student.id %}"
-                   class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition">
-                  Take Disciplinary Action
-                </a>
+
+              <!-- Actions: responsive 1-col (mobile) / 2-col (≥sm), consistent buttons -->
+              <td class="p-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-[260px]">
+                  {% comment %} shared button classes {% endcomment %}
+                  {% with btn_base="w-full block text-center break-words whitespace-normal px-3 py-2 rounded text-xs font-semibold transition min-w-[120px]" %}
+
+                    <a href="{% url 'lecturer:student_full_details' student.user.id %}"
+                       class="{{ btn_base }} bg-blue-600 hover:bg-blue-700 text-white">
+                      Full Details
+                    </a>
+
+                    <a href="{% url 'lecturer:student_achievements' student.id %}"
+                       class="{{ btn_base }} bg-purple-700 hover:bg-purple-800 text-white">
+                      Achievements
+                    </a>
+
+                    <a href="{% url 'lecturer:take_disciplinary_action' student.id %}"
+                       class="{{ btn_base }} bg-red-600 hover:bg-red-700 text-white">
+                      Disciplinary
+                    </a>
+
+                    <a href="{% url 'lecturer:add_parent_details' student.id %}"
+                       class="{{ btn_base }} bg-yellow-600 hover:bg-yellow-700 text-white">
+                      Parents
+                    </a>
+
+                  {% endwith %}
+                </div>
               </td>
             </tr>
           {% endfor %}

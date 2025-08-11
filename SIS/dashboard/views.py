@@ -19,92 +19,146 @@ from notifications.models import Notification
 
 from django.urls import reverse
 
+# dashboard/views.py
+from datetime import date
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+from accounts.models import CustomUser
+from core.models import (
+    Course, ClassGroup, Enrollment, Attendance, Student as CoreStudent, Lecturer as CoreLecturer,
+    StudentAchievement, DisciplinaryAction,
+)
+
 @login_required
 def unified_dashboard(request):
     user = request.user
-    context = {}
 
-    # --- Admin Dashboard ---
+    # -------- Safe defaults used by dashboard.html for ALL roles --------
+    context = {
+        # admin defaults
+        'total_lecturers': 0,
+        'total_students': 0,
+        'total_courses': 0,
+        'total_users': 0,
+
+        # lecturer defaults
+        'lecturer': None,
+        'classes_data': [],
+        'notifications': [],
+        'notifications_unread_count': 0,
+        'total_students': 0,
+        'average_attendance': 0,
+        'todays_attendance_count': 0,
+
+        # student defaults
+        'subjects_count': 0,
+        'attendance_streak': 0,
+        'enrollments': [],
+        'achievements': [],
+        'disciplinary_actions': [],
+        "profile_url_name": "dashboard:profile",
+
+        # role switch for the template
+        'dashboard_mode': None,
+    }
+
+    # ---------------- Admin ----------------
     if user.role == CustomUser.Role.ADMIN:
         context.update({
             'total_lecturers': CustomUser.objects.filter(role=CustomUser.Role.LECTURER).count(),
             'total_students': CustomUser.objects.filter(role=CustomUser.Role.STUDENT).count(),
             'total_courses': Course.objects.count(),
             'total_users': CustomUser.objects.count(),
+            'dashboard_mode': 'admin',
         })
 
-    # --- Lecturer Dashboard ---
+    # ---------------- Lecturer ----------------
     elif user.role == CustomUser.Role.LECTURER:
-        try:
-            lecturer = Lecturer.objects.get(user=user)
-        except Lecturer.DoesNotExist:
+        # IMPORTANT: use the *core* Lecturer model, not the accounts proxy
+        lecturer = CoreLecturer.objects.filter(user=user).select_related('department').first()
+        if not lecturer:
+            messages.error(request, "Lecturer profile missing. Please contact admin.")
             return redirect('accounts:login')
-        
+
         classgroups = ClassGroup.objects.filter(lecturers=lecturer)
-        enrollments = Enrollment.objects.filter(class_group__in=classgroups)
+        enrollments = (
+            Enrollment.objects
+            .filter(class_group__in=classgroups)
+            .select_related('student__user', 'class_group')
+        )
+
         today = date.today()
-        # No subject in select_related!
-        enrollments = enrollments.select_related('student', 'class_group')
+        todays_attendance_count = (
+            Attendance.objects
+            .filter(enrollment__in=enrollments, date=today)
+            .values('enrollment__student').distinct().count()
+        )
 
-        todays_attendance_count = Attendance.objects.filter(
-            enrollment__in=enrollments,
-            date=today
-        ).values('enrollment__student').distinct().count()
-        
-        classes_data = []
-        total_students = 0
-        attendance_values = []
-
+        classes_data, total_students, attendance_values = [], 0, []
+        # Build per-class student info
         for cg in classgroups:
             students_info = []
-            for student in cg.students.all():
+            # cg.students is the reverse of Student.class_group (core Student model)
+            for student in cg.students.select_related('user').all():
                 enrollment = enrollments.filter(student=student, class_group=cg).first()
-                attendance_records = Attendance.objects.filter(enrollment=enrollment) if enrollment else []
-                total_attendance = attendance_records.count() if enrollment else 0
-                present_attendance = attendance_records.filter(status='present').count() if enrollment else 0
-                attendance_percentage = (present_attendance / total_attendance * 100) if total_attendance > 0 else 0
+                if enrollment:
+                    qs = Attendance.objects.filter(enrollment=enrollment)
+                    total = qs.count()
+                    present = qs.filter(status='present').count()
+                    pct = (present / total * 100) if total else 0
+                else:
+                    pct = 0
                 students_info.append({
                     'student': student,
                     'email': student.user.email,
                     'full_name': student.user.get_full_name(),
-                    'date_enrolled': enrollment.date_enrolled if enrollment else None,
-                    'attendance_percentage': round(attendance_percentage, 2),
+                    'date_enrolled': getattr(enrollment, "date_enrolled", None),
+                    'attendance_percentage': round(pct, 2),
                     'enrollment': enrollment,
                 })
-                attendance_values.append(attendance_percentage)
+                attendance_values.append(pct)
+
             total_students += len(students_info)
-            classes_data.append({
-                'classgroup': cg,
-                'students_info': students_info,
-            })
+            classes_data.append({'classgroup': cg, 'students_info': students_info})
 
-        average_attendance = round(sum(attendance_values) / len(attendance_values), 2) if attendance_values else 0
+        avg_att = round(sum(attendance_values) / len(attendance_values), 2) if attendance_values else 0
 
-        notifications = Notification.objects.filter(lecturer=user, is_read=False)
-        notifications_unread_count = notifications.count()
+        # Optional notifications (guarded)
+        notifications = []
+        unread = 0
+        try:
+            from notifications.models import Notification  # adjust or remove if you don’t have it
+            notifications = Notification.objects.filter(lecturer=user, is_read=False)
+            unread = notifications.count()
+        except Exception:
+            pass
 
         context.update({
             'lecturer': lecturer,
             'classes_data': classes_data,
             'notifications': notifications,
-            'notifications_unread_count': notifications_unread_count,
+            'notifications_unread_count': unread,
             'total_students': total_students,
-            'average_attendance': average_attendance,
+            'average_attendance': avg_att,
             'todays_attendance_count': todays_attendance_count,
+            'dashboard_mode': 'lecturer',
         })
 
-    # --- Student Dashboard (CLEAN + FIXED) ---
+    # ---------------- Student ----------------
     elif user.role == CustomUser.Role.STUDENT:
         try:
-            student = Student.objects.select_related("class_group__course").get(user=user)
+            student = CoreStudent.objects.select_related("class_group__course").get(user=user)
             student.latest_activity = timezone.now()
             student.save(update_fields=['latest_activity'])
-        except Student.DoesNotExist:
+        except CoreStudent.DoesNotExist:
+            messages.error(request, "Student profile missing. Please contact admin.")
             return redirect('accounts:login')
 
         NON_ABSENT = ("present", "late", "excused")
 
-        # Enrollments (for cards and class list)
         enrollments_qs = (
             Enrollment.objects
             .filter(student=student)
@@ -112,28 +166,24 @@ def unified_dashboard(request):
             .prefetch_related('class_group__lecturers__user')
         )
 
-        # Per-class attendance (non-absent percentage)
         enrollments_list = []
         for enrollment in enrollments_qs:
-            attendance_qs = Attendance.objects.filter(enrollment=enrollment)
-            total = attendance_qs.count()
-            present_like = attendance_qs.filter(status__in=NON_ABSENT).count()
+            aqs = Attendance.objects.filter(enrollment=enrollment)
+            total = aqs.count()
+            present_like = aqs.filter(status__in=NON_ABSENT).count()
             pct = (present_like / total * 100) if total else 0.0
-
             enrollments_list.append({
                 'class_group': enrollment.class_group,
                 'attendance_percentage': round(pct, 0),
                 'enrollment': enrollment,
             })
 
-        # Subjects count from the student's current course (if any)
         subjects_count = (
             student.class_group.course.subjects.count()
             if student.class_group and student.class_group.course_id
             else 0
         )
 
-        # Attendance streak (consecutive non-absent sessions, newest → oldest)
         streak = 0
         for status in (
             Attendance.objects
@@ -146,7 +196,6 @@ def unified_dashboard(request):
             else:
                 break
 
-        # Achievements & disciplinary
         achievements_qs = StudentAchievement.objects.filter(student=student).order_by("-date_awarded")
         disciplinary_qs = DisciplinaryAction.objects.filter(student=student).order_by('-date')
 
@@ -156,9 +205,16 @@ def unified_dashboard(request):
             'enrollments': enrollments_list,
             'achievements': achievements_qs,
             'disciplinary_actions': disciplinary_qs,
-            "profile_url_name": "dashboard:profile",
+            'dashboard_mode': 'student',
         })
-        return render(request, "dashboard/dashboard.html", context)
+
+    else:
+        messages.error(request, "Your account role isn’t recognized.")
+        return redirect('accounts:login')
+
+    # One way out for all roles
+    return render(request, "dashboard/dashboard.html", context)
+
 
 # ========== Unified Profile View ==========
 

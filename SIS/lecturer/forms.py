@@ -159,3 +159,15 @@ class StudentAchievementForm(forms.ModelForm):
             'date_awarded': forms.DateInput(attrs={'type': 'date'}),
             'description': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Describe the achievement...'}),
         }
+
+# ---------- Emergency Contact Form ----------
+
+class EmergencyContactForm(forms.ModelForm):
+    class Meta:
+        model = Student
+        fields = ['emergency_name', 'emergency_relation', 'emergency_phone']
+        widgets = {
+            'emergency_name': forms.TextInput(attrs={'placeholder': 'e.g. Ali bin Abu'}),
+            'emergency_relation': forms.TextInput(attrs={'placeholder': 'e.g. Father / Mother / Guardian'}),
+            'emergency_phone': forms.TextInput(attrs={'placeholder': 'e.g. 012-3456789'}),
+        }

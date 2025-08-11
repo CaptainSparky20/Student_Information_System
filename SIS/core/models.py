@@ -32,7 +32,7 @@ class Subject(models.Model):
 
 # ---------- ClassGroup ----------
 class ClassGroup(models.Model):
-    name = models.CharField(max_length=32)  # e.g., CS-A, CS-B
+    name = models.CharField(max_length=32)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='classgroups')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='classgroups')
     year = models.PositiveIntegerField(default=timezone.now().year)
@@ -57,7 +57,8 @@ class Lecturer(models.Model):
 
 # ---------- Parent/Guardian ----------
 class Parent(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField(blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
@@ -71,13 +72,19 @@ class Parent(models.Model):
         ("grandmother", "Grandmother"),
         ("other", "Other"),
     ]
+    # Free-text list (e.g. "mother, guardian")
     roles = models.CharField(max_length=128, blank=True, help_text="Comma-separated roles (e.g. 'father,guardian')")
 
     def get_roles_list(self):
         return [r.strip().capitalize() for r in self.roles.split(',') if r.strip()]
 
     def __str__(self):
-        return self.user.get_full_name() or self.user.email
+        base = self.full_name or "Parent"
+        if self.phone_number:
+            return f"{base} ({self.phone_number})"
+        if self.email:
+            return f"{base} ({self.email})"
+        return base
 
 # ---------- Student ----------
 class Student(models.Model):
