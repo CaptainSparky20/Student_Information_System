@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Achievements ({{ total_achievements }})</h1>
+<ul>
+  {% for a in achievements %}
+    <li>
+      <strong>{{ a.title }}</strong> — {{ a.date_awarded }}<br>
+      <small>{{ a.description }}</small>
+    </li>
+  {% empty %}
+    <li>No achievements yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

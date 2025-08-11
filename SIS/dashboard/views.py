@@ -1,11 +1,23 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from accounts.models import CustomUser
-from core.models import Course, Lecturer, Student, Enrollment, Attendance, DisciplinaryAction, ClassGroup
-from notifications.models import Notification
 from django.utils import timezone
 from datetime import date
+from django.db.models import Count, Q, DecimalField, F, Avg, FloatField, ExpressionWrapper
+from accounts.models import CustomUser
+from core.models import (
+    Course,
+    Lecturer,
+    Student,
+    Enrollment,
+    Attendance,
+    DisciplinaryAction,
+    ClassGroup,
+    StudentAchievement
+)
+from notifications.models import Notification
+
+from django.urls import reverse
 
 @login_required
 def unified_dashboard(request):
@@ -81,56 +93,72 @@ def unified_dashboard(request):
             'todays_attendance_count': todays_attendance_count,
         })
 
-    # --- Student Dashboard ---
+    # --- Student Dashboard (CLEAN + FIXED) ---
     elif user.role == CustomUser.Role.STUDENT:
         try:
-            student = Student.objects.get(user=user)
+            student = Student.objects.select_related("class_group__course").get(user=user)
             student.latest_activity = timezone.now()
             student.save(update_fields=['latest_activity'])
         except Student.DoesNotExist:
             return redirect('accounts:login')
 
-        # All enrollments for this student
+        NON_ABSENT = ("present", "late", "excused")
+
+        # Enrollments (for cards and class list)
         enrollments_qs = (
             Enrollment.objects
             .filter(student=student)
-            .select_related('class_group')
+            .select_related('class_group__course')
             .prefetch_related('class_group__lecturers__user')
         )
 
+        # Per-class attendance (non-absent percentage)
         enrollments_list = []
         for enrollment in enrollments_qs:
-            class_group = enrollment.class_group
-            # Attendance calculation
             attendance_qs = Attendance.objects.filter(enrollment=enrollment)
-            total_attendance = attendance_qs.count()
-            present_attendance = attendance_qs.filter(status='present').count()
-            attendance_percentage = (present_attendance / total_attendance * 100) if total_attendance > 0 else 0
-
-            # Placeholder for grades: add your own logic here!
-            grades = []  # TODO: replace with real grades, if you add grades model
+            total = attendance_qs.count()
+            present_like = attendance_qs.filter(status__in=NON_ABSENT).count()
+            pct = (present_like / total * 100) if total else 0.0
 
             enrollments_list.append({
-                'class_group': class_group,
-                'attendance_percentage': round(attendance_percentage, 2),
-                'grades': grades,
-                'enrollment': enrollment,  # If you want to pass it for IDs
+                'class_group': enrollment.class_group,
+                'attendance_percentage': round(pct, 0),
+                'enrollment': enrollment,
             })
 
-        # Get disciplinary actions for this student
-        disciplinary_actions = DisciplinaryAction.objects.filter(student=student).order_by('-date')
+        # Subjects count from the student's current course (if any)
+        subjects_count = (
+            student.class_group.course.subjects.count()
+            if student.class_group and student.class_group.course_id
+            else 0
+        )
+
+        # Attendance streak (consecutive non-absent sessions, newest → oldest)
+        streak = 0
+        for status in (
+            Attendance.objects
+            .filter(enrollment__student=student)
+            .order_by("-date", "-session")
+            .values_list("status", flat=True)
+        ):
+            if status in NON_ABSENT:
+                streak += 1
+            else:
+                break
+
+        # Achievements & disciplinary
+        achievements_qs = StudentAchievement.objects.filter(student=student).order_by("-date_awarded")
+        disciplinary_qs = DisciplinaryAction.objects.filter(student=student).order_by('-date')
 
         context.update({
+            'subjects_count': subjects_count,
+            'attendance_streak': streak,
             'enrollments': enrollments_list,
-            'disciplinary_actions': disciplinary_actions,
+            'achievements': achievements_qs,
+            'disciplinary_actions': disciplinary_qs,
+            "profile_url_name": "dashboard:profile",
         })
         return render(request, "dashboard/dashboard.html", context)
-
-    else:
-        return redirect('accounts:login')  # Catch-all for users with unknown roles
-
-    context["profile_url_name"] = "dashboard:profile"
-    return render(request, "dashboard/dashboard.html", context)
 
 # ========== Unified Profile View ==========
 

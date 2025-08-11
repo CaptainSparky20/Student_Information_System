@@ -1,0 +1,187 @@
+{% extends "student/base_student.html" %}
+{% load static %}
+
+{% block content_inner %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- Page header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-semibold text-white">Class Overview</h1>
+    <p class="text-gray-300 mt-1">Everything about your current class at a glance.</p>
+  </div>
+
+  <!-- Class meta + quick stats -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Class Meta -->
+    <div class="lg:col-span-2 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
+      {% if class_group %}
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-xl font-semibold text-white">
+            {{ class_group.name|default:"-" }}
+          </h2>
+          <p class="text-gray-300 mt-1">
+            Course:
+            <span class="text-white">
+              {{ class_group.course.name|default:"-" }}
+              {% if class_group.course and class_group.course.code %} ({{ class_group.course.code }}){% endif %}
+            </span>
+          </p>
+          <p class="text-gray-300">
+            Department:
+            <span class="text-white">{{ class_group.department.name|default:"-" }}</span>
+          </p>
+          <p class="text-gray-300">
+            Year:
+            <span class="text-white">{{ class_group.year|default:"-" }}</span>
+            {% if class_group.classroom %}
+              • Room <span class="text-white">{{ class_group.classroom }}</span>
+            {% endif %}
+          </p>
+        </div>
+
+        <!-- Safe links (only show if URL name exists) -->
+        <div class="space-x-2">
+          {% url 'student:classes' as classes_url %}
+          {% if classes_url %}
+          <a href="{{ classes_url }}"
+             class="inline-flex items-center px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition">
+            My Classes
+          </a>
+          {% endif %}
+
+          {% url 'student:attendance' as attendance_url %}
+          {% if attendance_url %}
+          <a href="{{ attendance_url }}"
+             class="inline-flex items-center px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition">
+            Attendance
+          </a>
+          {% endif %}
+
+          {% url 'student:achievements' as achievements_url %}
+          {% if achievements_url %}
+          <a href="{{ achievements_url }}"
+             class="inline-flex items-center px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition">
+            Achievements
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Lecturers -->
+      <div class="mt-6">
+        <h3 class="text-lg font-semibold text-white mb-3">Lecturers</h3>
+        {% with lects=class_group.lecturers.all %}
+          {% if lects %}
+            <ul class="grid sm:grid-cols-2 gap-3">
+              {% for lec in lects %}
+                <li class="bg-white/5 border border-white/10 rounded-xl p-4">
+                  <p class="text-white font-medium">
+                    {{ lec.user.get_full_name|default:lec.user.email }}
+                  </p>
+                  {% if lec.user.email %}
+                    <p class="text-gray-300 text-sm">{{ lec.user.email }}</p>
+                  {% endif %}
+                  {% if lec.department %}
+                    <p class="text-gray-400 text-xs mt-1">Dept: {{ lec.department.name }}</p>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-gray-400">No lecturers assigned yet.</p>
+          {% endif %}
+        {% endwith %}
+      </div>
+      {% else %}
+        <p class="text-gray-400">You’re not assigned to a class yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="space-y-6">
+      <div class="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl">
+        <p class="text-indigo-100 text-sm">Subjects</p>
+        <p class="text-3xl font-bold">{{ subjects|length|default:0 }}</p>
+      </div>
+      <div class="bg-gradient-to-br from-sky-600 to-sky-700 rounded-2xl p-6 text-white shadow-xl">
+        <p class="text-sky-100 text-sm">Classmates</p>
+        <p class="text-3xl font-bold">{{ classmates|length|default:0 }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subjects -->
+  <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold text-white">Subjects</h2>
+      {% url 'student:classes' as classes_url %}
+      {% if classes_url %}
+      <a href="{{ classes_url }}" class="text-sm text-indigo-300 hover:text-indigo-200 underline">
+        View all
+      </a>
+      {% endif %}
+    </div>
+
+    {% if subjects %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for s in subjects %}
+          <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+            <p class="text-white font-medium">
+              {{ s.name }}
+              {% if s.code %}<span class="text-gray-300 text-sm">({{ s.code }})</span>{% endif %}
+            </p>
+
+            {% with llist=s.lecturers.all %}
+              {% if llist %}
+                <p class="text-gray-300 text-xs mt-2">Lecturers:</p>
+                <ul class="mt-1 space-y-1">
+                  {% for lec in llist %}
+                    <li class="text-gray-200 text-sm">• {{ lec.user.get_full_name|default:lec.user.email }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-gray-400">No subjects found for this class.</p>
+    {% endif %}
+  </div>
+
+  <!-- Classmates -->
+  <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold text-white">Classmates</h2>
+      {% url 'student:classes' as classes_url %}
+      {% if classes_url %}
+      <a href="{{ classes_url }}" class="text-sm text-indigo-300 hover:text-indigo-200 underline">
+        View all
+      </a>
+      {% endif %}
+    </div>
+
+    {% if classmates %}
+      <ul class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {% for st in classmates|slice:":9" %}
+          <li class="bg-white/5 border border-white/10 rounded-xl p-4">
+            <p class="text-white font-medium">
+              {{ st.user.get_full_name|default:st.user.email }}
+            </p>
+            {% if st.user.email %}
+              <p class="text-gray-300 text-sm">{{ st.user.email }}</p>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      {% if classmates|length > 9 %}
+        <p class="text-gray-400 text-sm mt-3">Showing 9 of {{ classmates|length }} classmates.</p>
+      {% endif %}
+    {% else %}
+      <p class="text-gray-400">No classmates to show.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

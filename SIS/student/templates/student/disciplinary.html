@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Disciplinary Actions ({{ total_actions }})</h1>
+<ul>
+  {% for d in actions %}
+    <li>
+      <strong>{{ d.action }}</strong> — {{ d.date }}<br>
+      <small>{{ d.description }}</small>
+    </li>
+  {% empty %}
+    <li>No disciplinary actions.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

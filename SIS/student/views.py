@@ -7,115 +7,180 @@ from accounts.forms import StudentProfileUpdateForm
 from core.models import Enrollment, Attendance, Course, ClassGroup, Student, DisciplinaryAction
 from django.utils.dateparse import parse_date
 from django.utils import timezone
+from core.models import StudentAchievement
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from accounts.decorators import role_required
+from accounts.models import CustomUser
+from core.models import Student, ClassGroup, Subject
+from django.db.models import Prefetch
 
 @role_required(CustomUser.Role.STUDENT)
-def student_dashboard(request):
-    # Update latest activity
-    try:
-        student = Student.objects.get(user=request.user)
-        student.latest_activity = timezone.now()
-        student.save(update_fields=['latest_activity'])
-    except Student.DoesNotExist:
-        student = None
+def class_overview(request):
+    # Get the logged-in student
+    student = get_object_or_404(Student, user=request.user)
+    class_group = student.class_group
 
-    enrollments = Enrollment.objects.filter(student__user=request.user).select_related('class_group')
-    classgroups_data = []
-
-    for enrollment in enrollments:
-        class_group = enrollment.class_group
-        attendance_records = Attendance.objects.filter(enrollment=enrollment)
-        total_attendance = attendance_records.count()
-        present_attendance = attendance_records.filter(status='present').count()
-        attendance_percentage = (present_attendance / total_attendance * 100) if total_attendance > 0 else 0
-
-        classgroups_data.append({
-            'class_group': class_group,
-            'attendance_percentage': round(attendance_percentage, 2),
+    if not class_group:
+        return render(request, "student/class_overview.html", {
+            "class_group": None,
+            "subjects": [],
+            "subj_to_lects": {},
+            "classmates": [],
         })
 
-    # Get disciplinary actions for the student
-    disciplinary_actions = DisciplinaryAction.objects.filter(student=student).order_by('-date') if student else []
+    # Fetch subjects for the class group’s course
+    subjects = []
+    subj_to_lects = {}
+    if class_group.course_id:
+        subjects = (
+            class_group.course.subjects
+            .all()
+            .select_related("course")
+            .prefetch_related("lecturers__user")
+        )
+        for s in subjects:
+            subj_to_lects[s.id] = list(s.lecturers.all())
+
+    # Fetch classmates (excluding self)
+    classmates = (
+        Student.objects.filter(class_group=class_group)
+        .exclude(id=student.id)
+        .select_related("user")
+    )
 
     context = {
-        'classgroups_data': classgroups_data,
-        'disciplinary_actions': disciplinary_actions,
+        "class_group": class_group,
+        "subjects": subjects,
+        "subj_to_lects": subj_to_lects,
+        "classmates": classmates,
     }
+    return render(request, "student/class_overview.html", context)
 
-    return render(request, 'student/dashboard.html', context)
+@login_required
+def attendance_overview(request):
+    if not _require_student(request.user):
+        return redirect("accounts:login")
+    student = Student.objects.get(user=request.user)
+    enrollments = Enrollment.objects.filter(student=student).select_related("class_group")
+
+    # Per-enrollment attendance + overall average
+    per_class = []
+    all_present, all_total = 0, 0
+    for enr in enrollments:
+        qs = Attendance.objects.filter(enrollment=enr)
+        total = qs.count()
+        present = qs.filter(status="present").count()
+        pct = round((present / total) * 100, 2) if total else 0.0
+        per_class.append({
+            "class_group": enr.class_group,
+            "present": present,
+            "total": total,
+            "percentage": pct,
+        })
+        all_present += present
+        all_total += total
+
+    avg_attendance = round((all_present / all_total) * 100, 2) if all_total else 0.0
+
+    context = {
+        "student": student,
+        "per_class": per_class,
+        "avg_attendance": avg_attendance,
+    }
+    return render(request, "student/attendance.html", context)
+
+@login_required
+def achievements_list(request):
+    if not _require_student(request.user):
+        return redirect("accounts:login")
+    student = Student.objects.get(user=request.user)
+    achievements = StudentAchievement.objects.filter(student=student).order_by("-date_awarded")
+    return render(request, "student/achievements.html", {
+        "student": student,
+        "achievements": achievements,
+        "total_achievements": achievements.count(),
+    })
+
+@login_required
+def disciplinary_list(request):
+    if not _require_student(request.user):
+        return redirect("accounts:login")
+    student = Student.objects.get(user=request.user)
+    actions = DisciplinaryAction.objects.filter(student=student).order_by("-date")
+    return render(request, "student/disciplinary.html", {
+        "student": student,
+        "actions": actions,
+        "total_actions": actions.count(),
+    })
 
 @role_required(CustomUser.Role.STUDENT)
-def attendance_detail(request, classgroup_id):
-    """
-    Show detailed attendance records for a specific class group,
-    with optional date filtering and attendance summary.
-    """
-    class_group = get_object_or_404(ClassGroup, id=classgroup_id)
-    enrollment = get_object_or_404(Enrollment, student__user=request.user, class_group=class_group)
+def attendance_detail(request, class_group_id):
+    # Current logged-in student
+    student = get_object_or_404(Student, user=request.user)
 
-    attendance_qs = Attendance.objects.filter(enrollment=enrollment).order_by('date')
+    # Class group selected
+    class_group = get_object_or_404(ClassGroup, id=class_group_id)
 
-    # Date range filter from GET parameters
-    start_date_str = request.GET.get('start_date')
-    end_date_str = request.GET.get('end_date')
+    # Make sure the student is actually enrolled in this class group
+    enrollment = get_object_or_404(Enrollment, student=student, class_group=class_group)
 
-    start_date = parse_date(start_date_str) if start_date_str else None
-    end_date = parse_date(end_date_str) if end_date_str else None
-
-    if start_date:
-        attendance_qs = attendance_qs.filter(date__gte=start_date)
-    if end_date:
-        attendance_qs = attendance_qs.filter(date__lte=end_date)
+    # Attendance records for this enrollment
+    attendance_qs = Attendance.objects.filter(enrollment=enrollment).order_by("-date", "-session")
 
     total_classes = attendance_qs.count()
-    attended_classes = attendance_qs.filter(status='present').count()
-    absences = attendance_qs.filter(status='absent').count()
-    attendance_percentage = (attended_classes / total_classes * 100) if total_classes > 0 else 0
+    absences = attendance_qs.filter(status="absent").count()
+    attended_classes = total_classes - absences  # treat non-absent as attended
+    attendance_percentage = round((attended_classes / total_classes) * 100, 1) if total_classes else 0
 
     context = {
-        'class_group': class_group,
-        'attendance_records': attendance_qs,
-        'total_classes': total_classes,
-        'attended_classes': attended_classes,
-        'absences': absences,
-        'attendance_percentage': round(attendance_percentage, 2),
+        "class_group": class_group,
+        "attendance_records": attendance_qs,
+        "total_classes": total_classes,
+        "attended_classes": attended_classes,
+        "attendance_percentage": attendance_percentage,
+        "absences": absences,
     }
+    return render(request, "student/attendance_details.html", context)
 
-    return render(request, 'student/attendance_detail.html', context)
 
-@login_required
+
 @role_required(CustomUser.Role.STUDENT)
-def student_profile(request):
-    """
-    Display the student profile page.
-    Also updates latest activity timestamp.
-    """
-    try:
-        student = Student.objects.get(user=request.user)
-        student.latest_activity = timezone.now()
-        student.save(update_fields=['latest_activity'])
-    except Student.DoesNotExist:
-        pass
+def classmates_list(request):
+    me = get_object_or_404(Student, user=request.user)
+    class_group = me.class_group
+    classmates = []
+    if class_group_id := getattr(class_group, "id", None):
+        classmates = (
+            Student.objects.filter(class_group_id=class_group_id)
+            .select_related("user")
+            .order_by("user__short_name", "user__full_name")
+        )
+    return render(request, "student/classmates_list.html", {
+        "me": me,
+        "class_group": class_group,
+        "classmates": classmates,
+    })
 
-    user = request.user
-    return render(request, 'student/profile.html', {'user': user})
-
-@login_required
 @role_required(CustomUser.Role.STUDENT)
-def student_profile_update(request):
-    """
-    Allow students to update their profile information including profile picture.
-    """
-    user = request.user
-
-    if request.method == 'POST':
-        form = StudentProfileUpdateForm(request.POST, request.FILES, instance=user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Your profile has been updated successfully.')
-            return redirect('student:profile_update')
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = StudentProfileUpdateForm(instance=user)
-
-    return render(request, 'student/profile_update.html', {'form': form})
+def subjects_list(request):
+    me = get_object_or_404(Student, user=request.user)
+    class_group = me.class_group
+    subjects = []
+    subj_to_lects = {}
+    if class_group and class_group.course_id:
+        subjects = (
+            class_group.course.subjects
+            .all()
+            .select_related("course")
+            .order_by("code")
+        )
+        # Subject.lecturers exists (M2M), build mapping for chips
+        for s in subjects:
+            subj_to_lects[s.id] = list(s.lecturers.select_related("user").all())
+    return render(request, "student/subjects_list.html", {
+        "me": me,
+        "class_group": class_group,
+        "subjects": subjects,
+        "subj_to_lects": subj_to_lects,
+    })
