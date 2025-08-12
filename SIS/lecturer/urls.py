@@ -26,7 +26,7 @@ urlpatterns = [
     # ===================
     path('classgroup/<int:classgroup_id>/attendance/', views.class_attendance, name='class_attendance'),  # Summary for attendance (not the student list)
     path('classgroup/<int:classgroup_id>/students/', views.classgroup_student_list, name='classgroup_student_list'),  # <-- View Students
-    path('classgroup/<int:classgroup_id>/export/', views.export_class_attendance, name='export_class_attendance'),
+    #path('classgroup/<int:classgroup_id>/export/', views.export_class_attendance, name='export_class_attendance'),
 
     # ===================
     # Course-specific actions (No longer Using)

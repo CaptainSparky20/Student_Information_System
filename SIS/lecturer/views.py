@@ -1,4 +1,4 @@
-import csv
+import csv, re
 from datetime import date, datetime, timedelta
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -209,7 +209,7 @@ def class_attendance(request, classgroup_id):
 def attendance_history(request):
     lecturer = get_object_or_404(Lecturer, user=request.user)
 
-    # ✅ All classgroups assigned to this lecturer
+    # All classgroups assigned to this lecturer
     classgroups = (
         ClassGroup.objects
         .filter(lecturers=lecturer)
@@ -605,7 +605,7 @@ def export_attendance(request):
     ).select_related('enrollment__student__user')
 
     response = HttpResponse(content_type='text/csv')
-    filename = f"attendance_{course.code}_{date_obj.strftime('%d-%m-%Y')}.csv"
+    filename = f"attendance_{course.code}_{date_obj.strftime('%d/%m/%y')}.csv"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     writer = csv.writer(response)
@@ -628,33 +628,134 @@ def export_attendance(request):
 # ==============================================================
 # EXPORT CLASS ATTENDANCE (CSV)
 # ==============================================================
+
+def _parse_any_date(s: str | None) -> date:
+    """
+    Accept 'YYYY-MM-DD' or 'DD-MM-YYYY'; fall back to today.
+    """
+    if not s:
+        return date.today()
+    d = parse_date(s)  # try ISO first
+    if d:
+        return d
+    try:  # try DD-MM-YYYY
+        return datetime.strptime(s, "%d-%m-%Y").date()
+    except Exception:
+        return date.today()
+
+
 @role_required(CustomUser.Role.LECTURER)
-def export_class_attendance(request, classgroup_id):
-    classgroup = get_object_or_404(ClassGroup, pk=classgroup_id)
-    enrollments = (
-        Enrollment.objects.filter(class_group=classgroup)
-        .select_related('student__user')
+def export_attendance(request):
+    """
+    Export attendance for a class group as CSV.
+    CSV 'Date' column is formatted as dd/mm/yy.
+
+    Query params expected by the template:
+      - classgroup: int (required)
+      - period: "day" | "week" | "month" | "all" (default "day")
+      - date: reference date (YYYY-MM-DD or DD-MM-YYYY). For "all" it’s optional.
+    """
+    lecturer = get_object_or_404(Lecturer, user=request.user)
+    classgroup_id = request.GET.get("classgroup")
+    if not classgroup_id:
+        return HttpResponse("Missing ?classgroup", status=400)
+
+    classgroup = (
+        ClassGroup.objects.filter(id=classgroup_id, lecturers=lecturer)
+        .select_related("course")
+        .first()
     )
-    students = [enrollment.student.user for enrollment in enrollments]
+    if not classgroup:
+        return HttpResponse("Class group not found or access denied.", status=403)
 
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = f'attachment; filename="students_{classgroup.name}.csv"'
+    period = request.GET.get("period", "day")
+    period = period if period in {"day", "week", "month", "all"} else "day"
+    ref_date = _parse_any_date(request.GET.get("date"))
 
+    if period == "day":
+        days_range = [ref_date]
+    elif period == "week":
+        start = ref_date - timedelta(days=ref_date.weekday())
+        days_range = [start + timedelta(days=i) for i in range(7)]
+    elif period == "month":
+        m1 = ref_date.replace(day=1)
+        m2 = m1.replace(year=m1.year + 1, month=1) if m1.month == 12 else m1.replace(month=m1.month + 1)
+        days_range = [m1 + timedelta(days=i) for i in range((m2 - m1).days)]
+    else:
+        enrollments_qs = Enrollment.objects.filter(class_group=classgroup)
+        att_qs = Attendance.objects.filter(enrollment__in=enrollments_qs).only("date")
+        first = att_qs.order_by("date").first()
+        last = att_qs.order_by("-date").first()
+        if not first or not last:
+            days_range = [date.today()]
+        else:
+            span = (last.date - first.date).days + 1
+            days_range = [first.date + timedelta(days=i) for i in range(span)]
+
+    enrollments = (
+        Enrollment.objects
+        .filter(class_group=classgroup)
+        .select_related("student__user", "class_group")
+        .order_by("student__user__full_name", "student__user__id")
+    )
+
+    sessions = ("morning", "evening")
+
+    att_records = (
+        Attendance.objects
+        .filter(enrollment__in=enrollments, date__range=[days_range[0], days_range[-1]])
+        .select_related("enrollment__student__user")
+        .only("enrollment_id", "date", "session", "status", "description")
+    )
+    att_map = {(r.enrollment_id, r.date, r.session): r for r in att_records}
+
+    # --- CSV response ---
+    base = f"{classgroup.name}"
+    base = re.sub(r"[^A-Za-z0-9._-]+", "_", base).strip("_")
+    if period == "day":
+        suffix = ref_date.strftime("%Y-%m-%d")
+    elif period == "week":
+        week_start = (ref_date - timedelta(days=ref_date.weekday())).strftime("%Y-%m-%d")
+        week_end = (parse_date(week_start) + timedelta(days=6)).strftime("%Y-%m-%d")
+        suffix = f"week_{week_start}_to_{week_end}"
+    elif period == "month":
+        suffix = ref_date.strftime("month_%Y-%m")
+    else:
+        suffix = "all"
+
+    filename = f"attendance_{base}_{suffix}.csv"
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
     writer = csv.writer(response)
-    writer.writerow(['#', 'Full Name', 'Email', 'Class Groups', 'Date Joined', 'Status'])
 
-    for idx, student in enumerate(students, start=1):
-        classgroups_str = ', '.join([
-            e.class_group.name for e in student.student.enrollment_set.all()
-        ])
-        status = 'Active' if student.is_active else 'Inactive'
-        writer.writerow([
-            idx,
-            student.get_full_name(),
-            student.email,
-            classgroups_str,
-            student.date_joined.strftime('%Y-%m-%d'),
-            status
-        ])
+    # Header
+    writer.writerow([
+        "Student Name",
+        "Email",
+        "Class Group",
+        "Date",      # dd/mm/yy in rows
+        "Session",
+        "Status",
+        "Notes",
+    ])
+
+    # Rows
+    for e in enrollments:
+        student_user = e.student.user
+        for d in days_range:
+            for s in sessions:
+                rec = att_map.get((e.id, d, s))
+                status = rec.status if rec else "not marked"
+                notes = rec.description if rec and rec.description else ""
+                writer.writerow([
+                    student_user.get_full_name(),
+                    student_user.email,
+                    classgroup.name,
+                    d.strftime("%d/%m/%y"),  # <-- updated format
+                    s.title(),
+                    status.title() if status != "not marked" else "n/a",
+                    notes,
+                ])
+
     return response
-
