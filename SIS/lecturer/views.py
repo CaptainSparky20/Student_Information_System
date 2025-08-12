@@ -207,127 +207,109 @@ def class_attendance(request, classgroup_id):
 
 @role_required(CustomUser.Role.LECTURER)
 def attendance_history(request):
-    """
-    View attendance records for a selected course and period.
-    Shows both 'morning' and 'evening' attendance for each student, for each day in the period.
-    Includes attendance stats for table display.
-    """
     lecturer = get_object_or_404(Lecturer, user=request.user)
 
-    # Find all classgroups taught by this lecturer
-    classgroups = ClassGroup.objects.filter(lecturers=lecturer)
-    # All courses in those classgroups
-    courses = Course.objects.filter(classgroups__in=classgroups).distinct()
-
-    session_list = ["morning", "evening"]
-    period_list = ["day", "week", "month"]
-
-    course_id = request.GET.get('course')
-    date_str = request.GET.get('date')
-    selected_period = request.GET.get('period', 'day')
-
-    # Default: first course if none selected
-    if not course_id and courses.exists():
-        course_id = str(courses.first().id)
-    selected_date = parse_date(date_str) if date_str else date.today()
-    selected_course = None
-    attendance_list = None
-    days_range = []
-
-    # Filter form with dynamic courses
-    form = AttendanceHistoryFilterForm(
-        initial={
-            'course': course_id or '',
-            'date': selected_date,
-        },
-        courses=courses
+    # ✅ All classgroups assigned to this lecturer
+    classgroups = (
+        ClassGroup.objects
+        .filter(lecturers=lecturer)
+        .select_related("course")
+        .order_by("course__name", "name")
+        .distinct()
     )
 
-    if course_id:
-        try:
-            selected_course = Course.objects.get(id=course_id)
-        except Course.DoesNotExist:
-            selected_course = None
+    period_list = ["day", "week", "month"]
+    selected_period = request.GET.get("period", "day")
+    if selected_period not in period_list:
+        selected_period = "day"
 
-    if selected_course:
-        # Get enrollments in any class group for this course
-        enrollments = Enrollment.objects.filter(class_group__course=selected_course).select_related('student__user')
+    # read classgroup from querystring
+    classgroup_id = request.GET.get("classgroup")
+    selected_date = parse_date(request.GET.get("date") or "") or date.today()
 
-        # Calculate days in period
+    # default to the first classgroup if none chosen
+    if not classgroup_id and classgroups.exists():
+        classgroup_id = str(classgroups.first().id)
+
+    # resolve selected_classgroup ONLY from lecturer's list
+    selected_classgroup = classgroups.filter(id=classgroup_id).first() if classgroup_id else None
+
+    attendance_list, days_range = None, []
+
+    # (optional) form wiring, if you have one
+    try:
+        from lecturer.forms import AttendanceHistoryFilterForm
+        form = AttendanceHistoryFilterForm(
+            initial={"class_group": classgroup_id or "", "date": selected_date},
+            classgroups=classgroups,  # <— pass lecturer’s classgroups here
+        )
+    except Exception:
+        form = None
+
+    if selected_classgroup:
+        # enrollments for this classgroup only
+        enrollments = (Enrollment.objects
+            .filter(class_group=selected_classgroup)
+            .select_related("student__user", "class_group")
+            .order_by("student__user__full_name", "student__user__id")
+        )
+
+        # build date range
         if selected_period == "day":
             days_range = [selected_date]
         elif selected_period == "week":
-            week_start = selected_date - timedelta(days=selected_date.weekday())
-            days_range = [week_start + timedelta(days=i) for i in range(7)]
-        elif selected_period == "month":
-            month_start = selected_date.replace(day=1)
-            if selected_date.month == 12:
-                next_month = selected_date.replace(year=selected_date.year + 1, month=1, day=1)
-            else:
-                next_month = selected_date.replace(month=selected_date.month + 1, day=1)
-            days_range = [month_start + timedelta(days=i) for i in range((next_month - month_start).days)]
+            start = selected_date - timedelta(days=selected_date.weekday())
+            days_range = [start + timedelta(days=i) for i in range(7)]
+        else:  # month
+            m1 = selected_date.replace(day=1)
+            m2 = (m1.replace(year=m1.year + 1, month=1) if m1.month == 12
+                  else m1.replace(month=m1.month + 1))
+            days_range = [m1 + timedelta(days=i) for i in range((m2 - m1).days)]
 
-        # Get all attendance records in this range (both sessions)
-        att_filter = {
-            "enrollment__in": enrollments,
-            "date__range": [days_range[0], days_range[-1]],
-        }
-        attendance_records = Attendance.objects.filter(**att_filter).select_related('enrollment__student__user')
-
-        # Build mapping: (enrollment_id, date, session) -> status
-        attendance_map = {}
-        for att in attendance_records:
-            attendance_map[(att.enrollment_id, att.date, att.session)] = att.status
-
-        attendance_list = []
-        for enrollment in enrollments:
-            status_by_day = []
-            present_count = absent_count = late_count = excused_count = 0
-            total_marked = 0
-            for day in days_range:
-                # Lookup both sessions for every day
-                morning_status = attendance_map.get((enrollment.id, day, "morning"), "not marked")
-                evening_status = attendance_map.get((enrollment.id, day, "evening"), "not marked")
-                # Count stats for both sessions
-                for session_status in [morning_status, evening_status]:
-                    if session_status == "present":
-                        present_count += 1
-                        total_marked += 1
-                    elif session_status == "absent":
-                        absent_count += 1
-                        total_marked += 1
-                    elif session_status == "late":
-                        late_count += 1
-                        total_marked += 1
-                    elif session_status == "excused":
-                        excused_count += 1
-                        total_marked += 1
-                status_by_day.append({'date': day, 'morning': morning_status, 'evening': evening_status})
-            attendance_percentage = (
-                round((present_count / total_marked) * 100, 2) if total_marked else None
+        if days_range:
+            records = (Attendance.objects
+                .filter(enrollment__in=enrollments, date__range=[days_range[0], days_range[-1]])
+                .select_related("enrollment__student__user")
+                .only("enrollment_id", "date", "session", "status")
             )
-            attendance_list.append({
-                'student': enrollment.student,
-                'statuses': status_by_day,
-                'present_count': present_count,
-                'absent_count': absent_count,
-                'late_count': late_count,
-                'excused_count': excused_count,
-                'total_marked': total_marked,
-                'attendance_percentage': attendance_percentage,
-            })
+            att = {(r.enrollment_id, r.date, r.session): r.status for r in records}
+
+            attendance_list = []
+            for e in enrollments:
+                row, present, absent, late, excused, total = [], 0, 0, 0, 0, 0
+                for d in days_range:
+                    m = att.get((e.id, d, "morning"), "not marked")
+                    v = att.get((e.id, d, "evening"), "not marked")
+                    for s in (m, v):
+                        if s in ("present", "absent", "late", "excused"): total += 1
+                        if s == "present": present += 1
+                        elif s == "absent": absent += 1
+                        elif s == "late": late += 1
+                        elif s == "excused": excused += 1
+                    row.append({"date": d, "morning": m, "evening": v})
+                pct = round((present / total) * 100, 2) if total else None
+                attendance_list.append({
+                    "student": e.student,
+                    "statuses": row,
+                    "present_count": present,
+                    "absent_count": absent,
+                    "late_count": late,
+                    "excused_count": excused,
+                    "total_marked": total,
+                    "attendance_percentage": pct,
+                })
 
     context = {
-        'form': form,
-        'attendance_list': attendance_list,
-        'selected_course': selected_course,
-        'selected_date': selected_date,
-        'selected_period': selected_period,
-        'session_list': session_list,
-        'period_list': period_list,
-        'days_range': days_range,
+        "form": form,
+        "classgroups": classgroups,              # ✅ template fallback
+        "selected_classgroup": selected_classgroup,
+        "attendance_list": attendance_list,
+        "selected_date": selected_date,
+        "selected_period": selected_period,
+        "period_list": period_list,
+        "days_range": days_range,
     }
-    return render(request, 'lecturer/attendance_history.html', context)
+    return render(request, "lecturer/attendance_history.html", context)
 
 
 

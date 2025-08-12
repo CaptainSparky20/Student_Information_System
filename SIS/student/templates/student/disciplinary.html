@@ -1,14 +1,36 @@
-{% extends "base.html" %}
-{% block content %}
-<h1>Disciplinary Actions ({{ total_actions }})</h1>
-<ul>
-  {% for d in actions %}
-    <li>
-      <strong>{{ d.action }}</strong> — {{ d.date }}<br>
-      <small>{{ d.description }}</small>
-    </li>
-  {% empty %}
-    <li>No disciplinary actions.</li>
-  {% endfor %}
-</ul>
+{% extends "student/base_student.html" %}
+{% load static %}
+
+{% block content_inner %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-semibold text-white">
+      Disciplinary Actions
+      <span class="ml-2 text-sm text-gray-400">({{ total_actions }})</span>
+    </h1>
+    <p class="text-gray-300">Any disciplinary records related to you will appear here.</p>
+  </div>
+
+  <!-- Disciplinary Actions List -->
+  <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+    {% if actions %}
+      <ul class="divide-y divide-white/10">
+        {% for d in actions %}
+          <li class="py-3">
+            <div class="flex flex-col">
+              <span class="text-white font-medium">{{ d.action }}</span>
+              <span class="text-gray-400 text-sm">{{ d.date|date:"M d, Y" }}</span>
+              {% if d.description %}
+                <p class="text-gray-300 text-sm mt-1">{{ d.description }}</p>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-gray-400">No disciplinary actions.</p>
+    {% endif %}
+  </div
 {% endblock %}

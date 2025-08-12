@@ -14,39 +14,50 @@ from accounts.decorators import role_required
 from accounts.models import CustomUser
 from core.models import Student, ClassGroup, Subject
 from django.db.models import Prefetch
+from core.models import Student, Lecturer
 
 @role_required(CustomUser.Role.STUDENT)
 def class_overview(request):
-    # Get the logged-in student
-    student = get_object_or_404(Student, user=request.user)
+    """Student view: show class meta, subjects, lecturers, and classmates."""
+    # student + class
+    student = get_object_or_404(Student.objects.select_related("user"), user=request.user)
     class_group = student.class_group
 
+    # handle students without a class
     if not class_group:
         return render(request, "student/class_overview.html", {
             "class_group": None,
             "subjects": [],
-            "subj_to_lects": {},
+            "subj_to_lects": {},   # kept for compatibility
             "classmates": [],
         })
 
-    # Fetch subjects for the class group’s course
+    # subjects for this class' course, with lecturers+users prefetched
     subjects = []
     subj_to_lects = {}
     if class_group.course_id:
         subjects = (
             class_group.course.subjects
-            .all()
             .select_related("course")
-            .prefetch_related("lecturers__user")
+            .prefetch_related(
+                Prefetch(
+                    "lecturers",
+                    queryset=Lecturer.objects.select_related("user")
+                )
+            )
+            .all()
         )
+        # keep the mapping for compatibility, even though template can iterate directly
         for s in subjects:
             subj_to_lects[s.id] = list(s.lecturers.all())
 
-    # Fetch classmates (excluding self)
+    # classmates (exclude self), bring along the linked user for names/emails/pictures
     classmates = (
-        Student.objects.filter(class_group=class_group)
-        .exclude(id=student.id)
+        Student.objects
+        .filter(class_group=class_group)
+        .exclude(pk=student.pk)
         .select_related("user")
+        .order_by("user__full_name", "user__email")
     )
 
     context = {
@@ -90,10 +101,8 @@ def attendance_overview(request):
     }
     return render(request, "student/attendance.html", context)
 
-@login_required
+@role_required(CustomUser.Role.STUDENT)
 def achievements_list(request):
-    if not _require_student(request.user):
-        return redirect("accounts:login")
     student = Student.objects.get(user=request.user)
     achievements = StudentAchievement.objects.filter(student=student).order_by("-date_awarded")
     return render(request, "student/achievements.html", {
@@ -102,10 +111,8 @@ def achievements_list(request):
         "total_achievements": achievements.count(),
     })
 
-@login_required
+@role_required(CustomUser.Role.STUDENT)
 def disciplinary_list(request):
-    if not _require_student(request.user):
-        return redirect("accounts:login")
     student = Student.objects.get(user=request.user)
     actions = DisciplinaryAction.objects.filter(student=student).order_by("-date")
     return render(request, "student/disciplinary.html", {

@@ -2,285 +2,259 @@
 {% block title %}View Past Attendance{% endblock %}
 
 {% block content_inner %}
-<div class="max-w-6xl mx-auto bg-white/10 backdrop-blur-2xl p-10 rounded-2xl border border-white/20 shadow-2xl mt-14">
+<div class="max-w-6xl mx-auto bg-white/10 backdrop-blur-2xl p-8 md:p-10 rounded-2xl border border-white/20 shadow-2xl mt-14">
 
-  <h2 class="text-4xl font-bold text-white mb-9 text-center tracking-tight drop-shadow flex items-center justify-center gap-3">
-    <svg class="w-9 h-9 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <h2 class="text-3xl md:text-4xl font-bold text-white mb-8 text-center tracking-tight drop-shadow flex items-center justify-center gap-3">
+    <svg class="w-8 h-8 md:w-9 md:h-9 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10" stroke-width="2"/>
       <path stroke-linecap="round" stroke-width="2" d="M12 6v6l4 2"/>
     </svg>
     Past Attendance Lookup
   </h2>
 
-  <!-- Controls Bar -->
-  <div class="flex flex-wrap items-end gap-4 md:gap-7 justify-between mb-8 bg-white/5 rounded-2xl p-5 border border-white/15 shadow">
-    <form id="attendance-filter-form" method="get" class="flex flex-wrap gap-4 items-end w-full md:w-auto">
-      <input type="hidden" name="period" id="id_period" value="{{ selected_period }}">
-      <input type="hidden" name="sessiontab" id="id_sessiontab" value="{{ request.GET.sessiontab|default:'both' }}">
+  <!-- Filters -->
+  <form id="attendance-filter-form" method="get" class="flex flex-col gap-5 mb-8 bg-white/5 rounded-2xl p-5 border border-white/15 shadow">
+    <input type="hidden" name="period" id="id_period" value="{{ selected_period }}">
+    <input type="hidden" name="sessiontab" id="id_sessiontab" value="{{ request.GET.sessiontab|default:'both' }}">
 
-      <!-- Class Selector -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <!-- Class Group -->
       <div>
-        <label for="id_course" class="block text-white font-semibold mb-1">Class</label>
-        <select name="course" id="id_course"
-                class="rounded-xl px-5 py-2 bg-slate-800/70 text-white font-semibold shadow border-2 border-blue-700/40 focus:border-blue-500 focus:ring-2 focus:ring-blue-400 transition-all w-56">
-          {% for course in form.fields.course.queryset %}
-            <option value="{{ course.id }}" {% if selected_course and course.id == selected_course.id %}selected{% endif %}>{{ course.name }}</option>
-          {% endfor %}
-        </select>
+        <label for="id_classgroup" class="block text-white font-semibold mb-1">Class Group</label>
+
+        {# Prefer the form field if available, else fall back to a context list `classgroups` #}
+        {% if form and form.fields.class_group %}
+          <select name="classgroup" id="id_classgroup"
+                  class="w-full rounded-xl px-4 py-2 bg-slate-800/70 text-white font-medium shadow border border-white/20 focus:border-blue-500 focus:ring-2 focus:ring-blue-400 transition">
+            {% if not selected_classgroup %}
+              <option value="" selected disabled>— Select a class group —</option>
+            {% endif %}
+            {% for cg in form.fields.class_group.queryset %}
+              <option value="{{ cg.id }}"
+                      {% if selected_classgroup and cg.id == selected_classgroup.id %}selected{% endif %}>
+                {{ cg.name }}{% if cg.course %} — {{ cg.course.name }}{% endif %}{% if cg.classroom %} ({{ cg.classroom }}){% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        {% else %}
+          <select name="classgroup" id="id_classgroup"
+                  class="w-full rounded-xl px-4 py-2 bg-slate-800/70 text-white font-medium shadow border border-white/20 focus:border-blue-500 focus:ring-2 focus:ring-blue-400 transition"
+                  {% if not classgroups %}disabled{% endif %}>
+            {% if not selected_classgroup %}
+              <option value="" selected disabled>— Select a class group —</option>
+            {% endif %}
+            {% for cg in classgroups %}
+              <option value="{{ cg.id }}"
+                      {% if selected_classgroup and cg.id == selected_classgroup.id %}selected{% endif %}>
+                {{ cg.name }}{% if cg.course %} — {{ cg.course.name }}{% endif %}{% if cg.classroom %} ({{ cg.classroom }}){% endif %}
+              </option>
+            {% empty %}
+              <option value="">No class groups found</option>
+            {% endfor %}
+          </select>
+        {% endif %}
       </div>
 
-      <!-- Period Buttons -->
+      <!-- Date -->
       <div>
-        <label class="block text-white font-semibold mb-1">Period</label>
-        <div class="flex rounded-xl bg-slate-700/60 border border-slate-500/30 overflow-hidden">
-          {% for period in period_list %}
-            <a href="#"
-              data-period="{{ period }}"
-              class="px-5 py-2 font-semibold text-sm period-btn transition text-white
-                {% if selected_period == period %} bg-blue-500/60 shadow {% else %} hover:bg-blue-900/50 {% endif %}">
-              {{ period|title }}
-            </a>
-          {% endfor %}
-        </div>
+        <label for="id_date" class="block text-white font-semibold mb-1">Date</label>
+        <input type="date" name="date" id="id_date" value="{{ selected_date|date:'Y-m-d' }}"
+               class="w-full rounded-xl px-4 py-2 bg-slate-800/70 text-white font-medium shadow border border-white/20 focus:border-blue-500 focus:ring-2 focus:ring-blue-400 transition">
       </div>
 
-      <!-- Date Picker -->
-      <div>
-        <label class="block text-white font-semibold mb-1">Date</label>
-        <button type="button" id="pick-date-btn"
-          class="inline-flex items-center px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow font-semibold transition w-full">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <rect width="18" height="18" x="3" y="3" rx="2"/>
-            <path stroke-linecap="round" stroke-width="2" d="M16 3v4M8 3v4M3 9h18"/>
-          </svg>
-          {{ selected_date|date:"Y-m-d" }}
-        </button>
-        <input type="date" name="date" id="id_date" value="{{ selected_date|date:'Y-m-d' }}" class="hidden">
+      <!-- Export -->
+      {% if attendance_list and selected_classgroup %}
+      <div class="md:justify-self-end">
+        <label class="block text-white font-semibold mb-1">Export</label>
+        <details class="relative">
+          <summary class="list-none w-full md:w-auto inline-flex items-center justify-between gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-medium transition shadow cursor-pointer">
+            <span class="inline-flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-width="2" d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/><polyline points="7 10 12 15 17 10"/>
+              </svg>
+              Export
+            </span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <div class="absolute right-0 mt-2 w-56 bg-white shadow-xl rounded-xl py-2 z-20 border border-amber-400">
+            <a class="block px-5 py-2 text-sm text-gray-800 hover:bg-amber-100"
+               href="{% url 'lecturer:export_attendance' %}?classgroup={{ selected_classgroup.id }}&date={{ selected_date|date:'d-m-Y' }}&period=day">Export CSV (Day)</a>
+            <a class="block px-5 py-2 text-sm text-gray-800 hover:bg-amber-100"
+               href="{% url 'lecturer:export_attendance' %}?classgroup={{ selected_classgroup.id }}&date={{ days_range.0|date:'d-m-Y' }}&period=week">Export CSV (Week)</a>
+            <a class="block px-5 py-2 text-sm text-gray-800 hover:bg-amber-100"
+               href="{% url 'lecturer:export_attendance' %}?classgroup={{ selected_classgroup.id }}&date={{ selected_date|date:'Y-m-01' }}&period=month">Export CSV (Month)</a>
+            <a class="block px-5 py-2 text-sm text-gray-800 hover:bg-amber-100"
+               href="{% url 'lecturer:export_attendance' %}?classgroup={{ selected_classgroup.id }}&period=all">Export All</a>
+          </div>
+        </details>
       </div>
-    </form>
+      {% endif %}
+    </div>
 
-    <!-- Export Dropdown -->
-    {% if attendance_list and selected_course %}
-    <div class="relative group inline-block ml-auto">
-      <button id="exportDropdownBtn"
-        class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-medium transition flex items-center gap-2 shadow"
-        type="button">
-        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-width="2" d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/><polyline points="7 10 12 15 17 10"/>
-        </svg>
-        Export
-        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
-      </button>
-      <div id="exportDropdownMenu" class="hidden absolute right-0 mt-2 w-56 bg-white shadow-xl rounded-xl py-2 z-50 border border-amber-400">
-        <a href="{% url 'lecturer:export_attendance' %}?course={{ selected_course.id }}&date={{ selected_date|date:'d-m-Y' }}&period=day"
-          class="block px-5 py-2 text-sm text-gray-800 hover:bg-amber-100">Export CSV (Day)</a>
-        <a href="{% url 'lecturer:export_attendance' %}?course={{ selected_course.id }}&date={{ days_range.0|date:'d-m-Y' }}&period=week"
-          class="block px-5 py-2 text-sm text-gray-800 hover:bg-amber-100">Export CSV (Week)</a>
-        <a href="{% url 'lecturer:export_attendance' %}?course={{ selected_course.id }}&date={{ selected_date|date:'Y-m-01' }}&period=month"
-          class="block px-5 py-2 text-sm text-gray-800 hover:bg-amber-100">Export CSV (Month)</a>
-        <a href="{% url 'lecturer:export_attendance' %}?course={{ selected_course.id }}&period=all"
-          class="block px-5 py-2 text-sm text-gray-800 hover:bg-amber-100">Export All</a>
+    <!-- Period -->
+    <div>
+      <span class="block text-white font-semibold mb-2">Period</span>
+      <div class="inline-flex overflow-hidden rounded-xl border border-white/20 bg-slate-800/40">
+        {% for p in period_list %}
+        <label class="px-4 py-2 text-white font-medium cursor-pointer transition {% if selected_period == p %} bg-blue-600 {% else %} hover:bg-slate-700 {% endif %}">
+          <input type="radio" name="period_radio" value="{{ p }}" class="sr-only"
+                 {% if selected_period == p %}checked{% endif %}
+                 onchange="document.getElementById('id_period').value=this.value; this.form.submit();">
+          {{ p|title }}
+        </label>
+        {% endfor %}
       </div>
     </div>
-    {% endif %}
-  </div>
 
-  <!-- Tabs for Morning/Evening/Both -->
-  <div class="flex mb-7 mt-2 gap-3 justify-end">
-    <a href="#" class="session-tab px-7 py-2 rounded-xl font-semibold text-base transition
-      {% if request.GET.sessiontab == 'morning' %}bg-indigo-500/90 text-white shadow{% else %}bg-slate-700/60 text-indigo-100 hover:bg-indigo-700/80{% endif %}"
-      data-sessiontab="morning">Morning</a>
-    <a href="#" class="session-tab px-7 py-2 rounded-xl font-semibold text-base transition
-      {% if request.GET.sessiontab == 'evening' %}bg-indigo-500/90 text-white shadow{% else %}bg-slate-700/60 text-indigo-100 hover:bg-indigo-700/80{% endif %}"
-      data-sessiontab="evening">Evening</a>
-    <a href="#" class="session-tab px-7 py-2 rounded-xl font-semibold text-base transition
-      {% if request.GET.sessiontab != 'morning' and request.GET.sessiontab != 'evening' %}bg-indigo-500/90 text-white shadow{% else %}bg-slate-700/60 text-indigo-100 hover:bg-indigo-700/80{% endif %}"
-      data-sessiontab="both">Both</a>
-  </div>
-
-  <style>
-    select, input[type="date"], button {
-      background-color: rgba(31, 41, 55, 0.22);
-      color: white;
-      border-radius: 0.65rem;
-      padding: 0.6rem 1.1rem;
-      border: 1px solid rgba(255,255,255,0.16);
-      outline: none;
-      font-size: 1rem;
-      min-width: 150px;
-      transition: border 0.2s, box-shadow 0.2s;
-    }
-    select:focus, input[type="date"]:focus, button:focus {
-      border-color: #2563eb;
-      box-shadow: 0 0 0 2px #2563eb33;
-    }
-    table { font-size: 1.02rem; }
-    #exportDropdownMenu { display: none; }
-    .group:focus-within #exportDropdownMenu, .group:hover #exportDropdownMenu { display: block; }
-    /* Hide session columns by JS */
-    .col-morning.hide, .col-evening.hide { display: none; }
-    .col-morning.active { background-color: rgba(165,180,252,0.24) !important; color: #334155; }
-    .col-evening.active { background-color: rgba(251,207,232,0.19) !important; color: #3b0764; }
-    /* Light status badges */
-    .status-badge-present {
-      background: rgba(34,197,94,0.11);
-      color: #165534;
-      font-weight: bold;
-    }
-    .status-badge-absent  {
-      background: rgba(239,68,68,0.11);
-      color: #991b1b;
-      font-weight: bold;
-    }
-    .status-badge-na      {
-      background: rgba(156,163,175,0.11);
-      color: #1e293b;
-      font-weight: bold;
-    }
-  </style>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const form = document.getElementById('attendance-filter-form');
-      form.querySelectorAll('select').forEach(sel => {
-        sel.addEventListener('change', function() { form.submit(); });
-      });
-      document.querySelectorAll('.period-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.preventDefault();
-          document.getElementById('id_period').value = btn.getAttribute('data-period');
-          form.submit();
-        });
-      });
-      document.getElementById('pick-date-btn').addEventListener('click', function() {
-        const d = document.getElementById('id_date');
-        d.classList.remove('hidden');
-        d.click();
-      });
-      document.getElementById('id_date').addEventListener('input', function() {
-        form.submit();
-      });
-      var btn = document.getElementById('exportDropdownBtn');
-      var menu = document.getElementById('exportDropdownMenu');
-      btn && btn.addEventListener('click', function(e) {
-        e.preventDefault(); menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-      });
-      document.addEventListener('click', function(e) {
-        if (!btn.contains(e.target) && !menu.contains(e.target)) menu.style.display = 'none';
-      });
-      document.querySelectorAll('.session-tab').forEach(tab => {
-        tab.addEventListener('click', function(e) {
-          e.preventDefault();
-          let value = tab.getAttribute('data-sessiontab');
-          document.getElementById('id_sessiontab').value = value;
-          form.submit();
-        });
-      });
-      // On load: show/hide columns based on sessiontab
-      function updateSessionCols() {
-        const sessionTab = "{{ request.GET.sessiontab|default:'both' }}";
-        let morningCols = document.querySelectorAll('.col-morning');
-        let eveningCols = document.querySelectorAll('.col-evening');
-        morningCols.forEach(td => td.classList.remove('hide','active'));
-        eveningCols.forEach(td => td.classList.remove('hide','active'));
-        if (sessionTab === 'morning') {
-          eveningCols.forEach(td => td.classList.add('hide'));
-          morningCols.forEach(td => td.classList.add('active'));
-        } else if (sessionTab === 'evening') {
-          morningCols.forEach(td => td.classList.add('hide'));
-          eveningCols.forEach(td => td.classList.add('active'));
-        } else {
-          morningCols.forEach(td => td.classList.add('active'));
-          eveningCols.forEach(td => td.classList.add('active'));
-        }
-      }
-      updateSessionCols();
-    });
-  </script>
+    <!-- Session -->
+    {% with current_session=request.GET.sessiontab|default:'both' %}
+    <div class="md:ml-auto">
+      <span class="block text-white font-semibold mb-2">Session</span>
+      <div class="inline-flex overflow-hidden rounded-xl border border-white/20 bg-slate-800/40">
+        <label class="px-4 py-2 text-white font-medium cursor-pointer transition {% if current_session == 'morning' %} bg-indigo-600 {% else %} hover:bg-slate-700 {% endif %}">
+          <input type="radio" name="sessiontab_radio" value="morning" class="sr-only"
+                 {% if current_session == 'morning' %}checked{% endif %}
+                 onchange="document.getElementById('id_sessiontab').value=this.value; this.form.submit();">
+          Morning
+        </label>
+        <label class="px-4 py-2 text-white font-medium cursor-pointer transition {% if current_session == 'evening' %} bg-indigo-600 {% else %} hover:bg-slate-700 {% endif %}">
+          <input type="radio" name="sessiontab_radio" value="evening" class="sr-only"
+                 {% if current_session == 'evening' %}checked{% endif %}
+                 onchange="document.getElementById('id_sessiontab').value=this.value; this.form.submit();">
+          Evening
+        </label>
+        <label class="px-4 py-2 text-white font-medium cursor-pointer transition {% if current_session == 'both' %} bg-indigo-600 {% else %} hover:bg-slate-700 {% endif %}">
+          <input type="radio" name="sessiontab_radio" value="both" class="sr-only"
+                 {% if current_session == 'both' %}checked{% endif %}
+                 onchange="document.getElementById('id_sessiontab').value=this.value; this.form.submit();">
+          Both
+        </label>
+      </div>
+    </div>
+    {% endwith %}
+  </form>
 
   {% if attendance_list is not None %}
-    <div class="mb-8">
-      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-        <div>
-          <h3 class="text-2xl font-bold text-white mb-0.5">{{ selected_course.name|default:"(Course not selected)" }}</h3>
-          <div class="text-blue-300 text-base font-semibold mt-1 mb-1">
-            <span class="bg-blue-900/20 px-4 py-1 rounded-full tracking-wide border border-blue-200/20 shadow-sm">
-              Classroom: <span class="text-white">{{ selected_course.classroom|default:"-" }}</span>
+    <div class="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+      <div>
+        <h3 class="text-2xl font-bold text-white mb-1">
+          {% if selected_classgroup %}
+            {{ selected_classgroup.name }}
+            {% if selected_classgroup.course %}<span class="text-blue-200 font-normal">— {{ selected_classgroup.course.name }}</span>{% endif %}
+          {% else %}
+            (Class not selected)
+          {% endif %}
+        </h3>
+        <div class="text-blue-300 text-sm md:text-base font-semibold mb-1">
+          <span class="bg-blue-900/20 px-3 py-1 rounded-full tracking-wide border border-blue-200/20 shadow-sm">
+            Classroom:
+            <span class="text-white">
+              {% if selected_classgroup and selected_classgroup.classroom %}{{ selected_classgroup.classroom }}{% else %}-{% endif %}
             </span>
-          </div>
-          <span class="text-gray-300 text-base">
-            {{ selected_date|date:"D, d-m-Y" }} 
-            &nbsp;&middot;&nbsp; 
-            <span class="font-semibold">{{ selected_period|title }}</span> View
           </span>
         </div>
-        <div class="flex gap-2 mt-3 md:mt-0">
-          <span class="bg-slate-700/60 text-white rounded-full px-5 py-2 text-base font-medium tracking-wide border border-slate-500/20">
-            {{ attendance_list|length }} Student{{ attendance_list|length|pluralize }}
-          </span>
+        <span class="text-gray-300 text-sm md:text-base">
+          {{ selected_date|date:"D, d-m-Y" }} · <span class="font-semibold">{{ selected_period|title }}</span> View
+        </span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="bg-slate-700/60 text-white rounded-full px-4 py-1.5 text-sm md:text-base font-medium tracking-wide border border-slate-500/20">
+          {{ attendance_list|length }} Student{{ attendance_list|length|pluralize }}
+        </span>
+        <div class="hidden md:flex items-center gap-2 text-xs text-white/90">
+          <span class="inline-block px-2 py-1 rounded bg-emerald-500/15 text-emerald-300">Present</span>
+          <span class="inline-block px-2 py-1 rounded bg-rose-500/15 text-rose-300">Absent</span>
+          <span class="inline-block px-2 py-1 rounded bg-slate-500/15 text-slate-200">n/a</span>
         </div>
       </div>
     </div>
+
     {% if attendance_list %}
-      <div class="overflow-x-auto rounded-xl shadow mb-4">
-        <table class="min-w-full bg-white/5 rounded-xl shadow border border-white/10">
-          <thead class="bg-white/10 text-slate-800/90">
-            <tr>
-              <th class="p-5 text-left font-semibold">Student</th>
-              {% for day in days_range %}
-                <th class="p-5 text-center font-semibold col-morning">Morning<br>{{ day|date:"D, d-m" }}</th>
-                <th class="p-5 text-center font-semibold col-evening">Evening<br>{{ day|date:"D, d-m" }}</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for entry in attendance_list %}
-            <tr class="border-t border-white/10 hover:bg-blue-900/10 transition">
-              <td class="p-5 text-slate-900 text-base bg-white/20 backdrop-blur-lg rounded-l-xl font-semibold">
-                <div class="flex items-center gap-3">
-                  <div class="w-11 h-11 bg-blue-700/20 rounded-full flex items-center justify-center text-slate-800 text-xl font-bold uppercase shadow">
-                    {{ entry.student.user.get_full_name|slice:":1" }}
-                  </div>
-                  <span class="font-medium">{{ entry.student.user.get_full_name }}</span>
-                </div>
-              </td>
-              {% for status in entry.statuses %}
-                <td class="p-5 text-center col-morning">
-                  {% if status.morning == "present" %}
-                    <span class="inline-block px-5 py-2 rounded-full status-badge-present">Present</span>
-                  {% elif status.morning == "absent" %}
-                    <span class="inline-block px-5 py-2 rounded-full status-badge-absent">Absent</span>
-                  {% elif status.morning == "not marked" %}
-                    <span class="inline-block px-5 py-2 rounded-full status-badge-na">n/a</span>
-                  {% else %}
-                    <span class="inline-block px-5 py-2 rounded-full status-badge-na">{{ status.morning|title }}</span>
-                  {% endif %}
-                </td>
-                <td class="p-5 text-center col-evening">
-                  {% if status.evening == "present" %}
-                    <span class="inline-block px-5 py-2 rounded-full status-badge-present">Present</span>
-                  {% elif status.evening == "absent" %}
-                    <span class="inline-block px-5 py-2 rounded-full status-badge-absent">Absent</span>
-                  {% elif status.evening == "not marked" %}
-                    <span class="inline-block px-5 py-2 rounded-full status-badge-na">n/a</span>
-                  {% else %}
-                    <span class="inline-block px-5 py-2 rounded-full status-badge-na">{{ status.evening|title }}</span>
-                  {% endif %}
-                </td>
-              {% endfor %}
-            </tr>
+    {% with current_session=request.GET.sessiontab|default:'both' %}
+    <div class="overflow-x-auto rounded-xl shadow border border-white/10">
+      <table class="min-w-full bg-white/5 rounded-xl">
+        <thead class="bg-white/10 text-slate-900">
+          <tr>
+            <th class="p-4 text-left font-semibold sticky left-0 bg-white/20 backdrop-blur z-10">Student</th>
+            {% for day in days_range %}
+              {% if current_session != 'evening' %}
+                <th class="p-4 text-center font-semibold">Morning<br>{{ day|date:"D, d-m" }}</th>
+              {% endif %}
+              {% if current_session != 'morning' %}
+                <th class="p-4 text-center font-semibold">Evening<br>{{ day|date:"D, d-m" }}</th>
+              {% endif %}
             {% endfor %}
-          </tbody>
-        </table>
-      </div>
+          </tr>
+        </thead>
+        <tbody class="text-slate-900">
+          {% for entry in attendance_list %}
+          <tr class="border-t border-white/10 hover:bg-blue-900/10 transition">
+            <td class="p-4 bg-white/20 backdrop-blur-lg font-semibold sticky left-0 z-10">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-700/20 rounded-full flex items-center justify-center text-slate-800 text-base font-bold uppercase shadow">
+                  {{ entry.student.user.get_full_name|slice:":1" }}
+                </div>
+                <span class="font-medium">{{ entry.student.user.get_full_name }}</span>
+              </div>
+            </td>
+
+            {% for status in entry.statuses %}
+              {% if current_session != 'evening' %}
+              <td class="p-4 text-center">
+                {% if status.morning == "present" %}
+                  <span class="inline-block px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-800 font-semibold">Present</span>
+                {% elif status.morning == "absent" %}
+                  <span class="inline-block px-3 py-1.5 rounded-full bg-rose-500/15 text-rose-800 font-semibold">Absent</span>
+                {% elif status.morning == "not marked" %}
+                  <span class="inline-block px-3 py-1.5 rounded-full bg-slate-500/15 text-slate-800 font-semibold">n/a</span>
+                {% else %}
+                  <span class="inline-block px-3 py-1.5 rounded-full bg-slate-500/15 text-slate-800 font-semibold">{{ status.morning|title }}</span>
+                {% endif %}
+              </td>
+              {% endif %}
+
+              {% if current_session != 'morning' %}
+              <td class="p-4 text-center">
+                {% if status.evening == "present" %}
+                  <span class="inline-block px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-800 font-semibold">Present</span>
+                {% elif status.evening == "absent" %}
+                  <span class="inline-block px-3 py-1.5 rounded-full bg-rose-500/15 text-rose-800 font-semibold">Absent</span>
+                {% elif status.evening == "not marked" %}
+                  <span class="inline-block px-3 py-1.5 rounded-full bg-slate-500/15 text-slate-800 font-semibold">n/a</span>
+                {% else %}
+                  <span class="inline-block px-3 py-1.5 rounded-full bg-slate-500/15 text-slate-800 font-semibold">{{ status.evening|title }}</span>
+                {% endif %}
+              </td>
+              {% endif %}
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endwith %}
     {% else %}
-      <div class="flex flex-col items-center justify-center gap-2 text-center text-gray-400 mt-10 text-lg">
+      <div class="flex flex-col items-center justify-center gap-2 text-center text-gray-300 mt-10 text-lg">
         <svg class="w-12 h-12 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-width="2" d="M8 17l4 4 4-4m-4 4V3"/>
         </svg>
-        <div>No students enrolled for this course on this {{ selected_period }}.</div>
+        <div>
+          {% if selected_classgroup %}
+            No attendance records for this {{ selected_period }}.
+          {% else %}
+            Pick a class group and date to view attendance.
+          {% endif %}
+        </div>
       </div>
     {% endif %}
   {% endif %}
 </div>
+
+<script>
+  const form = document.getElementById('attendance-filter-form');
+  ['id_classgroup','id_date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => form.submit());
+  });
+</script>
 {% endblock %}

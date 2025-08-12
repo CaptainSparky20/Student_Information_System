@@ -1,6 +1,6 @@
 from django import forms
 from accounts.models import CustomUser
-from core.models import Course, Student, Enrollment, DisciplinaryAction
+from core.models import Course, Student, Enrollment, DisciplinaryAction , Course, ClassGroup
 
 # ---------- Lecturer Login Form ----------
 class LecturerLoginForm(forms.Form):
@@ -99,28 +99,22 @@ class MessageForm(forms.Form):
 
 # ---------- Attendance History Filter Form ----------
 class AttendanceHistoryFilterForm(forms.Form):
-    course = forms.ModelChoiceField(
-        queryset=Course.objects.none(),    # Initially empty, set in __init__
+    class_group = forms.ModelChoiceField(
+        queryset=ClassGroup.objects.none(),
         required=False,
-        label="Course",
+        label="Class Group",
         widget=forms.Select(attrs={'class': 'text-white bg-gray-800 rounded p-2'})
     )
     date = forms.DateField(
-        widget=forms.DateInput(attrs={
-            'type': 'date',
-            'class': 'text-white bg-gray-800 rounded p-2'
-        }),
-        required=False,
-        label="Date"
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'text-white bg-gray-800 rounded p-2'}),
+        required=False, label="Date"
     )
 
     def __init__(self, *args, **kwargs):
-        courses = kwargs.pop('courses', None)
+        classgroups = kwargs.pop('classgroups', None)
         super().__init__(*args, **kwargs)
-        if courses is not None:
-            self.fields['course'].queryset = courses
-
-
+        if classgroups is not None:
+            self.fields['class_group'].queryset = classgroups
 
 # ---------- Disciplinary Action Form ----------
 class DisciplinaryActionForm(forms.ModelForm):
