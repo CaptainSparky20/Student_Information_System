@@ -54,7 +54,7 @@ urlpatterns = [
     # ===================
     # Parent-specific features
     # ===================
-     path("students/<int:student_id>/parents/add/",views.add_parent_details, name="add_parent_details"),
+    path("students/<int:student_id>/parents/add/",views.add_parent_details, name="add_parent_details"),
     path("students/<int:student_id>/parents/",views.manage_parents, name="manage_parents"),
     path("students/<int:student_id>/parents/<int:parent_id>/remove/",views.remove_parent, name="remove_parent"),
 
@@ -63,4 +63,5 @@ urlpatterns = [
     # Export CSV (per-course legacy)
     # ===================
     path('attendance/export/', views.export_attendance, name='export_attendance'),
+    path('classgroup/<int:classgroup_id>/export/students/', views.export_class_students, name='export_class_students'),
 ]

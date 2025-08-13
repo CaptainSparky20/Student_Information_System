@@ -23,6 +23,9 @@ from core.models import ClassGroup
 from .forms import DisciplinaryActionForm
 from .forms import StudentAchievementForm
 from core.forms import ParentForm
+from django.http import HttpResponseForbidden 
+from core.models import Parent
+
 
 #==============================================================
 # CLASS GROUP STUDENT LIST
@@ -513,22 +516,17 @@ def add_parent_details(request, student_id):
 
 @role_required(CustomUser.Role.LECTURER)
 def manage_parents(request, student_id):
-    """
-    Simple page to review all linked parents/guardians for a student
-    and provide a remove action.
-    """
     lecturer = get_object_or_404(Lecturer, user=request.user)
     student = get_object_or_404(Student, pk=student_id)
 
     if not ClassGroup.objects.filter(pk=student.class_group_id, lecturers=lecturer).exists():
         return HttpResponseForbidden("You are not authorized to view this page.")
 
-    parents = student.parents.select_related("user")
+    parents = student.parents.all()
     return render(request, "lecturer/manage_parents.html", {
         "student": student,
         "parents": parents,
     })
-
 
 @role_required(CustomUser.Role.LECTURER)
 def remove_parent(request, student_id, parent_id):
@@ -630,9 +628,6 @@ def export_attendance(request):
 # ==============================================================
 
 def _parse_any_date(s: str | None) -> date:
-    """
-    Accept 'YYYY-MM-DD' or 'DD-MM-YYYY'; fall back to today.
-    """
     if not s:
         return date.today()
     d = parse_date(s)  # try ISO first
@@ -646,15 +641,6 @@ def _parse_any_date(s: str | None) -> date:
 
 @role_required(CustomUser.Role.LECTURER)
 def export_attendance(request):
-    """
-    Export attendance for a class group as CSV.
-    CSV 'Date' column is formatted as dd/mm/yy.
-
-    Query params expected by the template:
-      - classgroup: int (required)
-      - period: "day" | "week" | "month" | "all" (default "day")
-      - date: reference date (YYYY-MM-DD or DD-MM-YYYY). For "all" it’s optional.
-    """
     lecturer = get_object_or_404(Lecturer, user=request.user)
     classgroup_id = request.GET.get("classgroup")
     if not classgroup_id:
@@ -757,5 +743,103 @@ def export_attendance(request):
                     status.title() if status != "not marked" else "n/a",
                     notes,
                 ])
+
+    return response
+
+
+
+@role_required(CustomUser.Role.LECTURER)
+def export_class_students(request, classgroup_id):
+    """
+    Export the students of a class group (and related fields) as CSV.
+    - One row per student enrolled in the class group.
+    - Dates are formatted as dd/mm/yy.
+    """
+    lecturer = get_object_or_404(Lecturer, user=request.user)
+    classgroup = (
+        ClassGroup.objects
+        .filter(id=classgroup_id, lecturers=lecturer)
+        .select_related("course", "department")
+        .first()
+    )
+    if not classgroup:
+        return HttpResponse("Class group not found or access denied.", status=403)
+
+    # Pull enrollments for THIS class group only, with all useful relations
+    enrollments = (
+        Enrollment.objects
+        .filter(class_group=classgroup)
+        .select_related(
+            "student__user",
+            "class_group__course",
+            "class_group__department",
+        )
+        .prefetch_related("student__parents")
+        .order_by("student__user__full_name", "student__user__id")
+    )
+
+    # CSV response setup
+    base = re.sub(r"[^A-Za-z0-9._-]+", "_", classgroup.name).strip("_") or "class"
+    today_str = timezone.localdate().strftime("%Y-%m-%d")  # keep filename ISO for sorting
+    filename = f"students_{base}_{today_str}.csv"
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    writer = csv.writer(response)
+
+    # Header
+    writer.writerow([
+        "Full Name",
+        "Email",
+        "IC Number",
+        "Phone",
+        "Active",
+        "Class Group",
+        "Course",
+        "Department",
+        "Date Enrolled (Class)",   # dd/mm/yy
+        "User Date Joined",        # dd/mm/yy
+        "Emergency Name",
+        "Emergency Relation",
+        "Emergency Phone",
+        "Parent Names",
+        "Parent Roles",
+        "Parent Phones",
+        "Parent Emails",
+    ])
+
+    # Date format required
+    dfmt = "%d/%m/%y"
+
+    # Rows
+    for e in enrollments:
+        stu = e.student
+        u = stu.user
+        parents = list(stu.parents.all())
+
+        parent_names = "; ".join(filter(None, [p.full_name for p in parents]))
+        parent_roles = "; ".join(filter(None, [", ".join(p.get_roles_list()) for p in parents]))
+        parent_phones = "; ".join(filter(None, [p.phone_number for p in parents]))
+        parent_emails = "; ".join(filter(None, [p.email for p in parents]))
+
+        writer.writerow([
+            u.get_full_name(),
+            u.email,
+            u.identity_card_number,
+            u.phone_number or "",
+            "Yes" if u.is_active else "No",
+            classgroup.name,
+            classgroup.course.name if classgroup.course else "",
+            classgroup.department.name if classgroup.department else "",
+            e.date_enrolled.strftime(dfmt) if e.date_enrolled else "",
+            u.date_joined.strftime(dfmt) if u.date_joined else "",
+            stu.emergency_name or "",
+            stu.emergency_relation or "",
+            stu.emergency_phone or "",
+            parent_names,
+            parent_roles,
+            parent_phones,
+            parent_emails,
+        ])
 
     return response

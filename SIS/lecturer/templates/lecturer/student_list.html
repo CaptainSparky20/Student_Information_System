@@ -7,10 +7,13 @@
 <div class="max-w-5xl mx-auto p-8 bg-white/10 rounded-2xl border border-white/20 shadow-lg mt-10">
   <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
     <h1 class="text-3xl font-bold text-white mb-2">Students in {{ classgroup.name }}</h1>
-    <a href="{% url 'lecturer:export_class_attendance' classgroup.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition shadow">
-      <svg class="inline w-5 h-5 mr-1 -mt-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
-      Export CSV
-    </a>
+    <a href="{% url 'lecturer:export_class_students' classgroup.id %}"
+   class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition shadow">
+  <svg class="inline w-5 h-5 mr-1 -mt-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path d="M12 5v14m7-7H5"/>
+  </svg>
+  Export CSV
+</a>
   </div>
 
   <!-- Search/filter bar -->
@@ -107,7 +110,7 @@
                       Disciplinary
                     </a>
 
-                    <a href="{% url 'lecturer:add_parent_details' student.id %}"
+                    <a href="{% url 'lecturer:manage_parents' student.id %}"
                        class="{{ btn_base }} bg-yellow-600 hover:bg-yellow-700 text-white">
                       Parents
                     </a>
