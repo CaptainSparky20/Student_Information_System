@@ -18,7 +18,21 @@
             Dashboard
           {% endif %}
         </a>
-        <p class="text-gray-300 text-sm">{{ request.user.get_full_name|default:request.user.email }}</p>
+
+        {# Full Name (Short Name) | fallback to email #}
+        <p class="text-gray-300 text-sm">
+          {% with full=request.user.get_full_name|default_if_none:'' short=request.user.get_short_name|default_if_none:'' email=request.user.email %}
+            {% if full %}
+              {{ full }}{% if short and short != full %} ({{ short }}){% endif %}
+            {% else %}
+              {% if short %}
+                {{ short }}
+              {% else %}
+                {{ email }}
+              {% endif %}
+            {% endif %}
+          {% endwith %}
+        </p>
       </div>
     </div>
 
@@ -38,7 +52,15 @@
           {% else %}
             <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-2 border-white/20 group-hover:border-blue-400 transition-colors">
               <span class="text-white font-semibold text-lg">
-                {{ request.user.get_full_name|first|upper|default:request.user.email|first|upper }}
+                {% with full=request.user.get_full_name|default_if_none:'' short=request.user.get_short_name|default_if_none:'' email=request.user.email %}
+                  {% if full %}
+                    {{ full|first|upper }}
+                  {% elif short %}
+                    {{ short|first|upper }}
+                  {% else %}
+                    {{ email|first|upper }}
+                  {% endif %}
+                {% endwith %}
               </span>
             </div>
           {% endif %}

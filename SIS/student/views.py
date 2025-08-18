@@ -4,17 +4,14 @@ from django.contrib import messages
 from accounts.decorators import role_required
 from accounts.models import CustomUser
 from accounts.forms import StudentProfileUpdateForm
-from core.models import Enrollment, Attendance, Course, ClassGroup, Student, DisciplinaryAction
+from core.models import Enrollment, Attendance, Course, ClassGroup, Student, DisciplinaryAction, StudentAchievement, Subject, Lecturer
 from django.utils.dateparse import parse_date
 from django.utils import timezone
-from core.models import StudentAchievement
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from accounts.decorators import role_required
-from accounts.models import CustomUser
-from core.models import Student, ClassGroup, Subject
 from django.db.models import Prefetch
-from core.models import Student, Lecturer
+import calendar
+from collections import defaultdict, OrderedDict
+from datetime import date
+
 
 @role_required(CustomUser.Role.STUDENT)
 def class_overview(request):
@@ -123,34 +120,96 @@ def disciplinary_list(request):
 
 @role_required(CustomUser.Role.STUDENT)
 def attendance_detail(request, class_group_id):
-    # Current logged-in student
+    # --- Who & where ---
     student = get_object_or_404(Student, user=request.user)
-
-    # Class group selected
     class_group = get_object_or_404(ClassGroup, id=class_group_id)
-
-    # Make sure the student is actually enrolled in this class group
     enrollment = get_object_or_404(Enrollment, student=student, class_group=class_group)
 
-    # Attendance records for this enrollment
-    attendance_qs = Attendance.objects.filter(enrollment=enrollment).order_by("-date", "-session")
+    # --- Records (one per date+session) ---
+    attendance_qs = (
+        Attendance.objects
+        .filter(enrollment=enrollment)
+        .order_by("-date", "-session")
+    )
 
+    # --- Quick stats ---
     total_classes = attendance_qs.count()
     absences = attendance_qs.filter(status="absent").count()
     attended_classes = total_classes - absences  # treat non-absent as attended
     attendance_percentage = round((attended_classes / total_classes) * 100, 1) if total_classes else 0
 
+    # --- Table rows: combine AM/PM into one row per date ---
+    daily_map = OrderedDict()  # {date: {"date": d, "morning": Attendance|None, "evening": Attendance|None}}
+    for rec in attendance_qs:
+        d = rec.date
+        if d not in daily_map:
+            daily_map[d] = {"date": d, "morning": None, "evening": None}
+        if rec.session == "morning":
+            daily_map[d]["morning"] = rec
+        elif rec.session == "evening":
+            daily_map[d]["evening"] = rec
+    daily_rows = list(daily_map.values())  # keeps ordering (desc by date)
+
+    # --- Toggle + calendar month params ---
+    mode = request.GET.get("mode", "table")  # 'table' or 'calendar'
+    today = date.today()
+    y = int(request.GET.get("y", today.year))
+    m = int(request.GET.get("m", today.month))
+
+    cal = calendar.Calendar(firstweekday=0)       # Monday = 0
+    raw_weeks = cal.monthdatescalendar(y, m)      # list[list[date]]
+
+    # --- Build month map with AM/PM objects for each visible day ---
+    by_date_sessions = defaultdict(lambda: {"morning": None, "evening": None})
+    month_records = attendance_qs.filter(date__year=y, date__month=m)
+    for r in month_records:
+        if r.session == "morning":
+            by_date_sessions[r.date]["morning"] = r
+        elif r.session == "evening":
+            by_date_sessions[r.date]["evening"] = r
+
+    # --- Calendar cells: include AM/PM objects directly ---
+    weeks_data = []
+    for wk in raw_weeks:
+        row = []
+        for d in wk:
+            sess = by_date_sessions.get(d, {"morning": None, "evening": None})
+            row.append({
+                "date": d,
+                "in_month": (d.month == m),
+                "is_today": (d == today),
+                "morning": sess["morning"],
+                "evening": sess["evening"],
+            })
+        weeks_data.append(row)
+
+    # --- Prev/next month ---
+    prev_y, prev_m = (y - 1, 12) if m == 1 else (y, m - 1)
+    next_y, next_m = (y + 1, 1)  if m == 12 else (y, m + 1)
+
+    # --- Context ---
     context = {
         "class_group": class_group,
-        "attendance_records": attendance_qs,
+        "attendance_records": attendance_qs,   # still available if needed elsewhere
+        "daily_rows": daily_rows,
+
         "total_classes": total_classes,
         "attended_classes": attended_classes,
         "attendance_percentage": attendance_percentage,
         "absences": absences,
+
+        # toggle + calendar
+        "mode": mode,
+        "year": y,
+        "month": m,
+        "month_name": calendar.month_name[m],
+        "weeks_data": weeks_data,
+        "prev_y": prev_y, "prev_m": prev_m,
+        "next_y": next_y, "next_m": next_m,
+        "today": today,
     }
+
     return render(request, "student/attendance_details.html", context)
-
-
 
 @role_required(CustomUser.Role.STUDENT)
 def classmates_list(request):
