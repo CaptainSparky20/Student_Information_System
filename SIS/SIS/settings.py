@@ -22,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
-SECRET_KEY = 'replace-this-with-a-random-string'
+#SECRET_KEY = 'replace-this-with-a-random-string'
 
-#DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+#DEBUG = True
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split()
 #ALLOWED_HOSTS = ['localhost', '127.0.0.1']
@@ -94,9 +94,9 @@ DATABASES = {
     }
 }
 
-#database_url = os.environ.get('DATABASE_URL')
+database_url = os.environ.get('DATABASE_URL')
 
-#DATABASES["default"] = dj_database_url.parse("postgresql://student_information_system_user:H3mhnReEkXIrS5MydjY6F8T7GMXOUep4@dpg-d285l97diees73dadp90-a.singapore-postgres.render.com/student_information_system")
+DATABASES["default"] = dj_database_url.parse("postgresql://student_information_system_user:H3mhnReEkXIrS5MydjY6F8T7GMXOUep4@dpg-d285l97diees73dadp90-a.singapore-postgres.render.com/student_information_system")
 #postgresql://student_information_system_user:H3mhnReEkXIrS5MydjY6F8T7GMXOUep4@dpg-d285l97diees73dadp90-a.singapore-postgres.render.com/student_information_system
 
 # Logout redirect page
