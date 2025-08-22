@@ -159,3 +159,24 @@ if os.environ.get("RENDER"):
     MEDIA_ROOT = '/var/media'   # must match your Render disk mount path
 else:
     MEDIA_ROOT = BASE_DIR / 'media'
+
+
+    # --- Password reset behavior ---
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 24 hours in seconds
+
+# --- From address used in outgoing emails ---
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-reply@example.com")
+SERVER_EMAIL = DEFAULT_FROM_EMAIL  # system emails
+
+# --- Development email backend (prints emails to the console) ---
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend"
+)
+
+# --- Optional SMTP config for production (use env vars on Render/.env) ---
+EMAIL_HOST = os.environ.get("EMAIL_HOST")            # e.g. smtp.sendgrid.net
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")  # e.g. 'apikey'
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "true").lower() == "true"
