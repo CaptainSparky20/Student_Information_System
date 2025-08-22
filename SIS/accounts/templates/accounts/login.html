@@ -37,7 +37,7 @@
             {% endif %}"
             role="alert">
             <div class="flex items-center">
-              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
               </svg>
               {{ message }}
@@ -56,9 +56,9 @@
       {% endif %}
 
       <!-- Login Form -->
-      <form method="post" class="space-y-6">
+      <form method="post" class="space-y-6" novalidate>
         {% csrf_token %}
-        
+
         <!-- Identifier Field (Email or IC) -->
         <div>
           <label for="{{ form.identifier.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">
@@ -66,11 +66,11 @@
           </label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
               </svg>
             </div>
-            {% render_field form.identifier class="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" %}
+            {% render_field form.identifier autocomplete="username email" class="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" %}
             {% if form.identifier.errors %}
               <div class="text-red-400 text-xs mt-1">{{ form.identifier.errors.0 }}</div>
             {% endif %}
@@ -79,23 +79,26 @@
 
         <!-- Password Field -->
         <div>
-          <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">
-            Password
-          </label>
+          <div class="flex items-center justify-between mb-2">
+            <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-300">
+              Password
+            </label>
+          </div>
+
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
               </svg>
             </div>
-            {% render_field form.password class="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" %}
+            {% render_field form.password autocomplete="current-password" class="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" %}
             <!-- Show/Hide Password Toggle -->
-            <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <svg id="eye-open" class="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center" aria-label="Toggle password visibility">
+              <svg id="eye-open" class="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
               </svg>
-              <svg id="eye-closed" class="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg id="eye-closed" class="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
               </svg>
             </button>
@@ -118,12 +121,20 @@
         <div>
           <button type="submit"
                   class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transform hover:scale-105 flex items-center justify-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
             </svg>
             Sign in to your account
           </button>
         </div>
+
+        <!-- Subtle secondary help (mobile friendly) -->
+        <p class="text-center text-sm text-gray-400">
+          Trouble signing in?
+          <a href="{% url 'accounts:password_reset' %}" class="text-blue-300 hover:text-blue-200 underline underline-offset-2">
+            Reset your password by email here!
+          </a>
+        </p>
       </form>
     </div>
   </div>
@@ -132,19 +143,10 @@
 <!-- CSS Animation -->
 <style>
 @keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: translateY(20px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
-.animate-fade-in {
-  animation: fadeIn 0.8s ease-out;
-}
+.animate-fade-in { animation: fadeIn 0.8s ease-out; }
 </style>
 
 <!-- JavaScript for Password Toggle -->
@@ -153,7 +155,9 @@ function togglePassword() {
   const passwordField = document.getElementById('id_password');
   const eyeOpen = document.getElementById('eye-open');
   const eyeClosed = document.getElementById('eye-closed');
-  
+
+  if (!passwordField) return;
+
   if (passwordField.type === 'password') {
     passwordField.type = 'text';
     eyeOpen.classList.add('hidden');
