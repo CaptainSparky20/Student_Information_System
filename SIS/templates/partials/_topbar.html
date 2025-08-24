@@ -68,27 +68,32 @@
         </button>
 
         <!-- Profile Dropdown -->
-        <div id="profile-menu" class="hidden absolute right-0 top-14 w-56 rounded-2xl
-          bg-white/15 dark:bg-white/10
-          border border-white/20 dark:border-white/10
-          shadow-2xl ring-1 ring-black/10
-          backdrop-blur-xl overflow-hidden z-[999999] transition-all">
-          <a href="{% url 'dashboard:profile' %}" class="flex items-center px-4 py-3 hover:bg-white/20 dark:hover:bg-white/10 text-gray-900 dark:text-white transition">
-            {% include "lucide/user.svg" %}<span class="ml-2">My Profile</span>
-          </a>
-          <a href="{% url 'dashboard:profile_update' %}" class="flex items-center px-4 py-3 hover:bg-white/20 dark:hover:bg-white/10 text-gray-900 dark:text-white transition">
-            {% include "lucide/edit-3.svg" %}<span class="ml-2">Update Profile</span>
-          </a>
-          <a href="{% url 'password_change' %}" class="flex items-center px-4 py-3 hover:bg-white/20 dark:hover:bg-white/10 text-gray-900 dark:text-white transition">
-            {% include "lucide/key.svg" %}<span class="ml-2">Change Password</span>
-          </a>
-          <form action="{% url 'logout' %}" method="post">
-            {% csrf_token %}
-            <button type="submit" class="flex items-center w-full px-4 py-3 text-red-600 hover:bg-white/20 dark:hover:bg-white/10 transition">
-              {% include "lucide/log-out.svg" %}<span class="ml-2">Logout</span>
-            </button>
-          </form>
-        </div>
+<div id="profile-menu" class="hidden absolute right-0 top-14 w-56 rounded-2xl
+  bg-white dark:bg-gray-800
+  border border-gray-200 dark:border-gray-700
+  shadow-2xl ring-1 ring-black/20
+  overflow-hidden z-[999999] transform scale-95 opacity-0 transition-all duration-200 ease-out">
+  <a href="{% url 'dashboard:profile' %}" 
+     class="flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition">
+    {% include "lucide/user.svg" %}<span class="ml-2">My Profile</span>
+  </a>
+  <a href="{% url 'dashboard:profile_update' %}" 
+     class="flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition">
+    {% include "lucide/edit-3.svg" %}<span class="ml-2">Update Profile</span>
+  </a>
+  <a href="{% url 'password_change' %}" 
+     class="flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition">
+    {% include "lucide/key.svg" %}<span class="ml-2">Change Password</span>
+  </a>
+  <form action="{% url 'logout' %}" method="post">
+    {% csrf_token %}
+    <button type="submit" 
+            class="flex items-center w-full px-4 py-3 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+      {% include "lucide/log-out.svg" %}<span class="ml-2">Logout</span>
+    </button>
+  </form>
+</div>
+
       </div>
     </div>
   </div>
@@ -105,16 +110,29 @@
   updateDateTime();
   setInterval(updateDateTime, 1000);
 
-  function toggleProfileMenu(e) {
-    e.stopPropagation();
-    document.getElementById('profile-menu').classList.toggle('hidden');
+function toggleProfileMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('profile-menu');
+  if (menu.classList.contains('hidden')) {
+    menu.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      menu.classList.remove('scale-95', 'opacity-0');
+      menu.classList.add('scale-100', 'opacity-100');
+    });
+  } else {
+    menu.classList.add('scale-95', 'opacity-0');
+    menu.classList.remove('scale-100', 'opacity-100');
+    setTimeout(() => menu.classList.add('hidden'), 200);
   }
+}
+
 
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('profile-menu');
     if (!menu.contains(e.target) && !document.getElementById('profile-btn').contains(e.target)) {
       menu.classList.add('hidden');
     }
+    
   });
 </script>
 {% block adminportal_content %}{% endblock %}
