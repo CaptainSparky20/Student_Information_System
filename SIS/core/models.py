@@ -2,6 +2,10 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from decimal import Decimal, ROUND_DOWN
+from django.core.validators import MinValueValidator, MaxValueValidator
+from datetime import date
+from decimal import Decimal, ROUND_HALF_UP
 
 # ---------- Department ----------
 class Department(models.Model):
@@ -179,3 +183,74 @@ class DisciplinaryAction(models.Model):
 
     def __str__(self):
         return f"{self.student}: {self.action} on {self.date}"
+
+# ---------- Student Fee Plan and Installments ----------
+class StudentFeePlan(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        ACTIVE = "active", "Active"
+        COMPLETED = "completed", "Completed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="fee_plans")
+    description = models.CharField(max_length=255, blank=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    months = models.PositiveIntegerField(help_text="Number of months to split into")
+    start_date = models.DateField(default=timezone.localdate)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.DRAFT)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.student.user.get_full_name()} – {self.total_amount} over {self.months} mo"
+
+    @property
+    def monthly_amount(self) -> Decimal:
+        if not self.months:
+            return Decimal("0.00")
+        amt = (self.total_amount / Decimal(self.months)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return amt
+
+    def ensure_installments(self) -> int:
+        """
+        Create or update equal monthly installments from start_date.
+        Last installment is adjusted to make the total match exactly.
+        Returns how many installment rows were created/updated.
+        """
+        if self.months <= 0:
+            return 0
+
+        base = self.monthly_amount
+        # Compute adjustment for the final month to match total precisely
+        subtotal = base * (self.months - 1)
+        last_amt = (self.total_amount - subtotal).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+        created = 0
+        for i in range(self.months):
+            seq = i + 1
+            due = (self.start_date + timezone.timedelta(days=30 * i))  # simple monthly step; swap for relativedelta if you want exact months
+            amt = last_amt if seq == self.months else base
+            obj, _created = StudentFeeInstallment.objects.update_or_create(
+                plan=self,
+                sequence_no=seq,
+                defaults={"due_date": due, "amount": amt},
+            )
+            created += 1 if _created else 0
+        return created
+
+
+class StudentFeeInstallment(models.Model):
+    plan = models.ForeignKey(StudentFeePlan, on_delete=models.CASCADE, related_name="installments")
+    sequence_no = models.PositiveIntegerField()
+    due_date = models.DateField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    is_paid = models.BooleanField(default=False)
+    paid_date = models.DateField(blank=True, null=True)
+    note = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        unique_together = (("plan", "sequence_no"),)
+        ordering = ("plan_id", "sequence_no")
+
+    def __str__(self):
+        status = "Paid" if self.is_paid else "Unpaid"
+        return f"{self.plan} – #{self.sequence_no} ({self.amount}) [{status}]"

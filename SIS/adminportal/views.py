@@ -14,6 +14,14 @@ from core.models import Department, Course, Lecturer, Student, Enrollment, Class
 import csv
 from django.template.loader import render_to_string
 from .forms import CustomUserCreationForm
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.db.models import Q, Sum, Count
+from django.utils import timezone
+from accounts.decorators import role_required
+from accounts.models import CustomUser
+from core.models import Student, StudentFeePlan, StudentFeeInstallment
+from .forms import FeePlanCreateForm, FeePlanCreateForStudentForm, InstallmentUpdateForm
 
 # ---------- LECTURERS ----------
 
@@ -477,3 +485,119 @@ def edit_classgroup(request, pk):
         'classgroup': classgroup,
         'course': classgroup.course,
     })
+
+
+# ---------- FEE MANAGEMENT ----------
+@role_required(CustomUser.Role.ADMIN)
+def fee_plan_list(request):
+    q = request.GET.get("q", "")
+    status = request.GET.get("status", "")
+    plans = (
+        StudentFeePlan.objects
+        .select_related("student__user")
+        .prefetch_related("installments")
+        .all()
+    )
+    if q:
+        plans = plans.filter(
+            Q(student__user__full_name__icontains=q) |
+            Q(student__user__email__icontains=q) |
+            Q(description__icontains=q)
+        )
+    if status:
+        plans = plans.filter(status=status)
+
+    # quick aggregates for the page header
+    aggregates = plans.aggregate(
+        total=Sum("total_amount"),
+        count=Count("id"),
+    )
+
+    context = {
+        "plans": plans.order_by("-created_at"),
+        "q": q,
+        "status": status,
+        "aggregates": aggregates,
+        "statuses": StudentFeePlan.Status.choices,
+    }
+    return render(request, "adminportal/student_part/fees/fee_plan_list.html", context)
+
+@role_required(CustomUser.Role.ADMIN)
+def fee_plan_create(request):
+    if request.method == "POST":
+        form = FeePlanCreateForm(request.POST)
+        if form.is_valid():
+            plan = form.save()
+            messages.success(request, "Fee plan created. You can now generate installments.")
+            return redirect("adminportal:fee_plan_detail", plan_id=plan.id)
+    else:
+        form = FeePlanCreateForm()
+    return render(request, "adminportal/student_part/fees/fee_plan_form.html", {"form": form, "creating_for_student": None})
+
+@role_required(CustomUser.Role.ADMIN)
+def fee_plan_create_for_student(request, student_id):
+    student = get_object_or_404(Student.objects.select_related("user"), pk=student_id)
+    if request.method == "POST":
+        form = FeePlanCreateForStudentForm(request.POST)
+        if form.is_valid():
+            plan = form.save(commit=False)
+            plan.student = student
+            plan.save()
+            messages.success(request, f"Fee plan created for {student.user.get_full_name()}.")
+            return redirect("adminportal:fee_plan_detail", plan_id=plan.id)
+    else:
+        form = FeePlanCreateForStudentForm()
+    return render(request, "adminportal/student_part/fees/fee_plan_form.html", {"form": form, "creating_for_student": student})
+
+@role_required(CustomUser.Role.ADMIN)
+def fee_plan_detail(request, plan_id):
+    plan = get_object_or_404(
+        StudentFeePlan.objects.select_related("student__user").prefetch_related("installments"),
+        pk=plan_id
+    )
+
+    # Inline update of a single installment (optional UX)
+    if request.method == "POST":
+        inst_id = request.POST.get("installment_id")
+        if inst_id:
+            inst = get_object_or_404(StudentFeeInstallment, pk=inst_id, plan=plan)
+            form = InstallmentUpdateForm(request.POST, instance=inst)
+            if form.is_valid():
+                obj = form.save(commit=False)
+                if obj.is_paid and not obj.paid_date:
+                    obj.paid_date = timezone.localdate()
+                obj.save()
+                messages.success(request, f"Installment #{inst.sequence_no} updated.")
+                return redirect("adminportal:fee_plan_detail", plan_id=plan.id)
+        messages.error(request, "Invalid form submission.")
+
+    # Derived amounts
+    total_due = sum(i.amount for i in plan.installments.all())
+    total_paid = sum(i.amount for i in plan.installments.filter(is_paid=True))
+    balance = total_due - total_paid
+
+    context = {
+        "plan": plan,
+        "installments": plan.installments.order_by("sequence_no"),
+        "installment_form": InstallmentUpdateForm(),
+        "total_due": total_due,
+        "total_paid": total_paid,
+        "balance": balance,
+    }
+    return render(request, "adminportal/student_part/fees/fee_plan_detail.html", context)
+
+@role_required(CustomUser.Role.ADMIN)
+def fee_plan_generate_installments(request, plan_id):
+    plan = get_object_or_404(StudentFeePlan, pk=plan_id)
+    created = plan.ensure_installments()
+    messages.success(request, f"Installments generated/updated ({created} rows).")
+    return redirect("adminportal:fee_plan_detail", plan_id=plan.id)
+
+@role_required(CustomUser.Role.ADMIN)
+def installment_toggle_paid(request, pk):
+    inst = get_object_or_404(StudentFeeInstallment.objects.select_related("plan"), pk=pk)
+    inst.is_paid = not inst.is_paid
+    inst.paid_date = timezone.localdate() if inst.is_paid else None
+    inst.save(update_fields=["is_paid", "paid_date"])
+    messages.success(request, f"Installment #{inst.sequence_no} is now {'PAID' if inst.is_paid else 'UNPAID'}.")
+    return redirect("adminportal:fee_plan_detail", plan_id=inst.plan_id)
