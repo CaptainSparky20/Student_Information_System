@@ -94,15 +94,12 @@ WSGI_APPLICATION = 'SIS.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        conn_max_age=600,         # persistent connections
+        ssl_require=True          # force SSL for managed Postgres (Render/Heroku/etc.)
+    )
 }
-
-database_url = os.environ.get('DATABASE_URL')
-
-DATABASES["default"] = dj_database_url.parse("postgresql://student_information_system_user:H3mhnReEkXIrS5MydjY6F8T7GMXOUep4@dpg-d285l97diees73dadp90-a.singapore-postgres.render.com/student_information_system")
 #postgresql://student_information_system_user:H3mhnReEkXIrS5MydjY6F8T7GMXOUep4@dpg-d285l97diees73dadp90-a.singapore-postgres.render.com/student_information_system
 
 # Logout redirect page
