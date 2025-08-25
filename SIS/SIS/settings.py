@@ -1,7 +1,6 @@
 """
 Django settings for SIS project (prod-ready with local defaults).
 """
-
 from pathlib import Path
 import os
 import dj_database_url
@@ -12,15 +11,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ── Core toggles (env-first, sane local defaults) ──────────────────────────────
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"          # Local: True
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-insecure-change-me")  # Set in prod!
-ALLOWED_HOSTS = os.environ.get(
-    "ALLOWED_HOSTS",
-    "localhost 127.0.0.1 [::1]"
-).split()
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost 127.0.0.1 [::1]").split()
 
 # If not explicitly set, derive CSRF_TRUSTED_ORIGINS from ALLOWED_HOSTS in prod
-raw_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
-if raw_csrf:
-    CSRF_TRUSTED_ORIGINS = raw_csrf.split()
+_raw_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+if _raw_csrf:
+    CSRF_TRUSTED_ORIGINS = _raw_csrf.split()
 else:
     CSRF_TRUSTED_ORIGINS = [
         f"https://{h}" for h in ALLOWED_HOSTS
@@ -41,7 +37,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",               # <-- before sessions is OK
+    "whitenoise.middleware.WhiteNoiseMiddleware",   # keep right after SecurityMiddleware
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -73,7 +69,7 @@ DATABASES = {
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
         ssl_require=(
-            not DEBUG and os.environ.get("DATABASE_URL", "").startswith(("postgres://","postgresql://"))
+            not DEBUG and os.environ.get("DATABASE_URL", "").startswith(("postgres://", "postgresql://"))
         ),
     )
 }
@@ -95,23 +91,34 @@ TIME_ZONE = "Asia/Kuala_Lumpur"
 USE_I18N = True
 USE_TZ = True
 
-# ── Static / Media (WhiteNoise for static; local media or Render disk) ────────
+# ── Static files (WhiteNoise) ──────────────────────────────────────────────────
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [BASE_DIR / "static"]              # your app's static/
+STATIC_ROOT = BASE_DIR / "staticfiles"                # collected static (prod)
 
-# WhiteNoise hashed, compressed storage for prod cache-busting
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    }
-}
-
+# ── Media (user uploads) ───────────────────────────────────────────────────────
 MEDIA_URL = "/media/"
 if os.environ.get("RENDER"):
-    MEDIA_ROOT = "/var/media"     # must match Render disk mount path
+    MEDIA_ROOT = "/var/media"                         # attach Render disk here
 else:
     MEDIA_ROOT = BASE_DIR / "media"
+
+# ── Storages (Django 5+) ───────────────────────────────────────────────────────
+# Provide BOTH 'default' (for MEDIA) and 'staticfiles' (for STATIC).
+STORAGES = {
+    # Media storage: local filesystem
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        # "OPTIONS": {"location": MEDIA_ROOT, "base_url": MEDIA_URL},  # optional
+    },
+    # Static storage: WhiteNoise
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage.CompressedStaticFilesStorage" if DEBUG
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        )
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
