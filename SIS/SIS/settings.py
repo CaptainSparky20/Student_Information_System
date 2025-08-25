@@ -35,7 +35,26 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split()
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split()
 
 
+if not DEBUG:
+    # Always redirect HTTP -> HTTPS
+    SECURE_SSL_REDIRECT = True
 
+    # Cookies only over HTTPS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # Reasonable SameSite defaults to reduce CSRF risk from cross-site requests
+    SESSION_COOKIE_SAMESITE = "Lax"
+    CSRF_COOKIE_SAMESITE = "Lax"
+
+    # HTTP Strict Transport Security (tell browsers to use HTTPS)
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Lock down framing & referrers
+    X_FRAME_OPTIONS = "DENY"
+    SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 
@@ -100,7 +119,7 @@ DATABASES = {
         ssl_require=True          # force SSL for managed Postgres (Render/Heroku/etc.)
     )
 }
-#postgresql://student_information_system_user:H3mhnReEkXIrS5MydjY6F8T7GMXOUep4@dpg-d285l97diees73dadp90-a.singapore-postgres.render.com/student_information_system
+
 
 # Logout redirect page
 LOGOUT_REDIRECT_URL = '/'
