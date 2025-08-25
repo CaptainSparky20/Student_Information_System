@@ -441,16 +441,15 @@ def take_disciplinary_action(request, student_id):
 def student_full_details(request, student_id):
     """
     Show full student details for lecturers.
-    Prefer Student.pk; fall back to related CustomUser.pk to avoid MultipleObjectsReturned.
+    Accepts a Student.pk (from the list page).
     """
-
     enrollments_qs = (
         Enrollment.objects
         .select_related("class_group__course")
         .prefetch_related("class_group__lecturers__user")
     )
 
-    base_qs = (
+    student = get_object_or_404(
         Student.objects
         .select_related("user", "class_group__course", "class_group__department")
         .prefetch_related(
@@ -459,21 +458,14 @@ def student_full_details(request, student_id):
             Prefetch("disciplinary_actions", queryset=DisciplinaryAction.objects.order_by("-date")),
             Prefetch("enrollment_set", queryset=enrollments_qs, to_attr="prefetched_enrollments"),
         )
-        .filter(user__role=CustomUser.Role.STUDENT)
+        .filter(user__role=CustomUser.Role.STUDENT),
+        pk=student_id
     )
 
-    # Try Student.pk first
-    try:
-        student = base_qs.get(pk=student_id)
-    except ObjectDoesNotExist:
-        # Fallback to CustomUser.pk (unique relation) if no Student with that pk
-        student = get_object_or_404(base_qs, user__id=student_id)
-
-    context = {
+    return render(request, "lecturer/student_full_details.html", {
         "student_profile": student,
         "enrollments": getattr(student, "prefetched_enrollments", []),
-    }
-    return render(request, "lecturer/student_full_details.html", context)
+    })
 
 @role_required(CustomUser.Role.LECTURER)
 def update_student_activity(request, student_id):

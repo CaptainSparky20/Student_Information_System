@@ -103,7 +103,7 @@
                   {% comment %} shared button classes {% endcomment %}
                   {% with btn_base="w-full block text-center break-words whitespace-normal px-3 py-2 rounded text-xs font-semibold transition min-w-[120px]" %}
 
-                    <a href="{% url 'lecturer:student_full_details' student.user.id %}"
+                    <a href="{% url 'lecturer:student_full_details' student.id %}"
                        class="{{ btn_base }} bg-blue-600 hover:bg-blue-700 text-white">
                       Full Details
                     </a>

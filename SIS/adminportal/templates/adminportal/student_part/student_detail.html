@@ -1,4 +1,4 @@
-{% extends 'lecturer/base_lecturer.html' %}
+{% extends 'adminportal/base_adminportal.html' %}
 {% load static %}
 
 {% block title %}Student Details{% endblock %}
@@ -121,11 +121,6 @@
         {% endfor %}
       </ul>
     {% else %}
-      <div class="flex items-center justify-between">
-        <span class="italic text-gray-400">No parent/guardian info.</span>
-        <a href="{% url 'lecturer:manage_parents' student_profile.id %}"
-           class="text-sm text-blue-200 hover:underline">Manage</a>
-      </div>
     {% endif %}
   {% endwith %}
 </div>
