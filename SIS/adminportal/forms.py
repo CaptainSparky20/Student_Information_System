@@ -1,6 +1,6 @@
 from django import forms
 from accounts.models import CustomUser
-from core.models import Department, Student, Course, ClassGroup, Lecturer, ClassGroup, Subject
+from core.models import Department, Student, Course, ClassGroup, Lecturer, ClassGroup, Subject, StudentFeePlan, StudentFeeInstallment
 
 # ---------- LECTURER CREATION FORM ----------
 class LecturerCreationForm(forms.ModelForm):
@@ -409,3 +409,30 @@ class CustomUserCreationForm(forms.ModelForm):
             user.save()
             self.save_m2m()
         return user
+
+
+# ---------- STUDENT FEE PLAN FORM ----------
+class FeePlanCreateForm(forms.ModelForm):
+    class Meta:
+        model = StudentFeePlan
+        fields = ["student", "description", "total_amount", "months", "start_date", "status"]
+        widgets = {
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+        }
+
+class FeePlanCreateForStudentForm(forms.ModelForm):
+    """Same as above, but 'student' is fixed and hidden."""
+    class Meta:
+        model = StudentFeePlan
+        fields = ["description", "total_amount", "months", "start_date", "status"]
+        widgets = {
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+        }
+
+class InstallmentUpdateForm(forms.ModelForm):
+    class Meta:
+        model = StudentFeeInstallment
+        fields = ["is_paid", "paid_date", "note"]
+        widgets = {
+            "paid_date": forms.DateInput(attrs={"type": "date"}),
+        }

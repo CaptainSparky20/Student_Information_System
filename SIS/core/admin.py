@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Lecturer, Student, Course, Subject, ClassGroup,
     Enrollment, Attendance,
-    StudentAchievement, DisciplinaryAction, Department, Parent
+    StudentAchievement, DisciplinaryAction, Department, Parent, StudentFeePlan, StudentFeeInstallment,
 )
 
 # ---------- Lecturer ----------
@@ -102,3 +102,30 @@ class DepartmentAdmin(admin.ModelAdmin):
 class ParentAdmin(admin.ModelAdmin):
     list_display = ("full_name", "email", "phone_number", "occupation")
     search_fields = ("full_name", "email", "phone_number")
+
+# ---------- Student Fee Plan and Installments ----------
+class StudentFeeInstallmentInline(admin.TabularInline):
+    model = StudentFeeInstallment
+    extra = 0
+    fields = ("sequence_no", "due_date", "amount", "is_paid", "paid_date", "note")
+    readonly_fields = ("sequence_no", "amount")
+    ordering = ("sequence_no",)
+
+@admin.register(StudentFeePlan)
+class StudentFeePlanAdmin(admin.ModelAdmin):
+    list_display = ("student", "total_amount", "months", "monthly_amount_display", "start_date", "status", "created_at")
+    list_filter = ("status", "start_date",)
+    search_fields = ("student__user__full_name", "student__user__email", "description")
+    inlines = [StudentFeeInstallmentInline]
+    actions = ["generate_installments"]
+
+    def monthly_amount_display(self, obj):
+        return obj.monthly_amount
+    monthly_amount_display.short_description = "Monthly Amount"
+
+    @admin.action(description="Generate monthly installments")
+    def generate_installments(self, request, queryset):
+        total_created = 0
+        for plan in queryset:
+            total_created += plan.ensure_installments()  # see model method below
+        self.message_user(request, f"Installments generated/updated for {queryset.count()} plan(s). ({total_created} rows affected)")
