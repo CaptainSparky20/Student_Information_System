@@ -8,7 +8,7 @@ from django.utils import timezone
 from django import forms
 from django.contrib.auth.decorators import login_required
 from django.utils.dateparse import parse_date
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 
 from core.models import (
     Lecturer, Course, Enrollment, Attendance,
@@ -18,9 +18,8 @@ from accounts.models import CustomUser
 from accounts.decorators import role_required
 from accounts.forms import LecturerProfileUpdateForm
 from notifications.models import Notification
-from .forms import AttendanceForm, MessageForm, AttendanceHistoryFilterForm
+from .forms import AttendanceForm, MessageForm, AttendanceHistoryFilterForm, DisciplinaryActionForm
 from core.models import ClassGroup
-from .forms import DisciplinaryActionForm
 from .forms import StudentAchievementForm
 from core.forms import ParentForm
 from django.http import HttpResponseForbidden 
@@ -442,30 +441,35 @@ def take_disciplinary_action(request, student_id):
 def student_full_details(request, student_id):
     """
     Show full student details for lecturers.
+    Accepts either Student.pk or the related CustomUser.pk in the URL.
     """
-    # Fetch the Student instance with all related data in one go
-    student = get_object_or_404(
-        Student.objects.select_related('user')
-        .prefetch_related(
-            'achievements',
-            'disciplinary_actions',
-            'parents',
-            'enrollment_set__class_group__course',
-            'enrollment_set__class_group__lecturers__user'
-        ),
-        user__id=student_id
+
+    enrollments_qs = (
+        Enrollment.objects
+        .select_related("class_group__course")
+        .prefetch_related("class_group__lecturers__user")
     )
 
-    # Get all enrollments (class memberships) for the student
-    enrollments = student.enrollment_set.select_related(
-        'class_group__course'
-    ).prefetch_related('class_group__lecturers__user')
+    student = get_object_or_404(
+        Student.objects
+        .select_related("user", "class_group__course", "class_group__department")
+        .prefetch_related(
+            "parents",
+            Prefetch("achievements", queryset=StudentAchievement.objects.order_by("-date_awarded")),
+            Prefetch("disciplinary_actions", queryset=DisciplinaryAction.objects.order_by("-date")),
+            Prefetch("enrollment_set", queryset=enrollments_qs, to_attr="prefetched_enrollments"),
+        )
+        .filter(
+            Q(pk=student_id) | Q(user__id=student_id),        # <— support both ids
+            user__role=CustomUser.Role.STUDENT
+        )
+    )
 
     context = {
-        'student_profile': student,
-        'enrollments': enrollments,
+        "student_profile": student,
+        "enrollments": getattr(student, "prefetched_enrollments", []),
     }
-    return render(request, 'lecturer/student_full_details.html', context)
+    return render(request, "lecturer/student_full_details.html", context)
 
 @role_required(CustomUser.Role.LECTURER)
 def update_student_activity(request, student_id):

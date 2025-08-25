@@ -191,9 +191,21 @@
           <tr class="border-t border-white/10 hover:bg-blue-900/10 transition">
             <td class="p-4 bg-white/20 backdrop-blur-lg font-semibold sticky left-0 z-10">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-700/20 rounded-full flex items-center justify-center text-slate-800 text-base font-bold uppercase shadow">
-                  {{ entry.student.user.get_full_name|slice:":1" }}
-                </div>
+                {% with sp=entry.student.profile_picture up=entry.student.user.profile_picture %}
+                  {% if sp %}
+                    <img src="{{ sp.url }}" alt="{{ entry.student.user.full_name }} profile"
+                         class="w-10 h-10 rounded-full object-cover border-2 border-white/30 shadow-sm">
+                  {% elif up %}
+                    <img src="{{ up.url }}" alt="{{ entry.student.user.full_name }} profile"
+                         class="w-10 h-10 rounded-full object-cover border-2 border-white/30 shadow-sm">
+                  {% else %}
+                    <div class="w-10 h-10 bg-blue-700/20 rounded-full flex items-center justify-center text-slate-800 text-base font-bold uppercase shadow">
+                      {% with n=entry.student.user.full_name|default:entry.student.user.email %}
+                        {{ n|slice:":1" }}
+                      {% endwith %}
+                    </div>
+                  {% endif %}
+                {% endwith %}
                 <span class="font-medium">{{ entry.student.user.get_full_name }}</span>
               </div>
             </td>

@@ -53,15 +53,23 @@
             <tr class="border-t border-white/10 hover:bg-blue-800/10 transition">
               <td class="p-4 whitespace-nowrap">{{ forloop.counter }}</td>
               <td class="p-4">
-                {% if student.profile_picture %}
-                  <img src="{{ student.profile_picture.url }}" alt="Profile"
-                       class="w-10 h-10 rounded-full object-cover border-2 border-white/30 shadow-sm" />
-                {% else %}
-                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-2 border-white/30 text-white font-bold text-lg">
-                    {{ student.user.get_full_name|first|default:"?" }}
-                  </div>
-                {% endif %}
-              </td>
+  {% with sp=student.profile_picture up=student.user.profile_picture %}
+    {% if sp %}
+      <img src="{{ sp.url }}" alt="{{ student.user.full_name }} profile"
+           class="w-10 h-10 rounded-full object-cover border-2 border-white/30 shadow-sm" />
+    {% elif up %}
+      <img src="{{ up.url }}" alt="{{ student.user.full_name }} profile"
+           class="w-10 h-10 rounded-full object-cover border-2 border-white/30 shadow-sm" />
+    {% else %}
+      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600
+                  flex items-center justify-center border-2 border-white/30 text-white font-bold text-lg">
+        {% with n=student.user.full_name|default:student.user.email %}
+          {{ n|slice:":1" }}
+        {% endwith %}
+      </div>
+    {% endif %}
+  {% endwith %}
+</td>
               <!-- Let name and email fit content without over-widening the table -->
               <td class="p-4 font-medium whitespace-nowrap">{{ student.user.get_full_name }}</td>
               <td class="p-4 whitespace-nowrap">

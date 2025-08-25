@@ -1,27 +1,46 @@
-{% extends 'adminportal/base_adminportal.html' %}
+{% extends 'lecturer/base_lecturer.html' %}
 {% load static %}
 
 {% block title %}Student Details{% endblock %}
 
 {% block content_inner %}
-<div class="max-w-3xl mx-auto mt-10 bg-white/10 rounded-2xl shadow-lg p-8 border border-white/20 space-y-8">
+<div class="max-w-4xl mx-auto mt-10 bg-white/10 rounded-2xl shadow-lg p-6 md:p-8 border border-white/20 space-y-8">
+
   <!-- Profile section -->
   <div class="flex flex-col md:flex-row items-center gap-8">
     <div>
-      {% if student_profile.profile_picture %}
-        <img src="{{ student_profile.profile_picture.url }}" alt="Profile Picture"
-             class="w-36 h-36 rounded-full object-cover border-4 border-white/20 shadow-lg">
-      {% else %}
-        <div class="w-36 h-36 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-4 border-white/20 shadow-lg text-3xl font-bold text-white">
-          {{ student_profile.user.full_name|slice:":1" }}
-        </div>
-      {% endif %}
+      {% with sp_pic=student_profile.profile_picture up=student_profile.user.profile_picture %}
+        {% if sp_pic %}
+          <img src="{{ sp_pic.url }}" alt="Profile Picture"
+               class="w-32 h-32 md:w-36 md:h-36 rounded-full object-cover border-4 border-white/20 shadow-lg">
+        {% elif up %}
+          <img src="{{ up.url }}" alt="Profile Picture"
+               class="w-32 h-32 md:w-36 md:h-36 rounded-full object-cover border-4 border-white/20 shadow-lg">
+        {% else %}
+          <div class="w-32 h-32 md:w-36 md:h-36 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-4 border-white/20 shadow-lg text-3xl font-bold text-white">
+            {{ student_profile.user.full_name|default:student_profile.user.email|slice:":1" }}
+          </div>
+        {% endif %}
+      {% endwith %}
     </div>
-    <div class="flex-1 space-y-2">
-      <h2 class="text-3xl font-bold text-white mb-1">{{ student_profile.user.full_name }}</h2>
-      <p class="text-lg text-gray-300 mb-2">IC: <span class="font-mono">{{ student_profile.user.identity_card_number }}</span></p>
+
+    <div class="flex-1 space-y-1.5">
+      <h2 class="text-2xl md:text-3xl font-bold text-white">
+        {{ student_profile.user.full_name|default:student_profile.user.email }}
+      </h2>
       <p class="text-gray-300">
-        Last Online: 
+        <span class="font-semibold">IC:</span>
+        <span class="font-mono">{{ student_profile.user.identity_card_number|default:"-" }}</span>
+      </p>
+      {% if student_profile.class_group %}
+      <p class="text-gray-300">
+        <span class="font-semibold">Current Class:</span>
+        {{ student_profile.class_group.name }}
+        <span class="text-gray-400">({{ student_profile.class_group.year }})</span>
+      </p>
+      {% endif %}
+      <p class="text-gray-300">
+        Last Online:
         {% if student_profile.latest_activity %}
           <span class="font-mono">{{ student_profile.latest_activity|date:"Y-m-d H:i" }}</span>
         {% else %}
@@ -31,89 +50,141 @@
     </div>
   </div>
 
-  <!-- Contact Info -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/10 p-6 rounded-xl border border-white/20">
-    <div>
-      <h3 class="text-lg font-semibold text-white mb-2">Contact Info</h3>
-      <p><span class="font-semibold text-gray-300">Email:</span> {{ student_profile.user.email }}</p>
-      <p><span class="font-semibold text-gray-300">Phone:</span> {{ student_profile.phone_number|default:"-" }}</p>
-      <p><span class="font-semibold text-gray-300">Address:</span> {{ student_profile.address|default:"-" }}</p>
-      <p><span class="font-semibold text-gray-300">Date of Birth:</span> 
-        {{ student_profile.date_of_birth|date:"Y-m-d"|default:"-" }}</p>
-    </div>
-    <div>
-      <h3 class="text-lg font-semibold text-white mb-2">Emergency Contact</h3>
-      <p><span class="font-semibold text-gray-300">Name:</span> {{ student_profile.emergency_name|default:"-" }}</p>
-      <p><span class="font-semibold text-gray-300">Relation:</span> {{ student_profile.emergency_relation|default:"-" }}</p>
-      <p><span class="font-semibold text-gray-300">Phone:</span> {{ student_profile.emergency_phone|default:"-" }}</p>
-    </div>
+<!-- Contact Info -->
+<div class="bg-white/10 p-6 rounded-xl border border-white/20 space-y-1.5">
+  <h3 class="text-lg font-semibold text-white mb-2">Contact Info</h3>
+  <p>
+    <span class="font-semibold text-gray-300">Email:</span>
+    <a href="mailto:{{ student_profile.user.email }}" class="text-blue-200 hover:underline break-all">
+      {{ student_profile.user.email|default:"-" }}
+    </a>
+  </p>
+  <p>
+    <span class="font-semibold text-gray-300">Phone:</span>
+    {% with sp=student_profile.phone_number up=student_profile.user.phone_number %}
+      {{ sp|default:up|default:"-" }}
+    {% endwith %}
+  </p>
+  <p>
+    <span class="font-semibold text-gray-300">Address:</span>
+    {% with sp=student_profile.address up=student_profile.user.address %}
+      {{ sp|default:up|default:"-" }}
+    {% endwith %}
+  </p>
+  <p>
+    <span class="font-semibold text-gray-300">Date of Birth:</span>
+    {{ student_profile.date_of_birth|date:"Y-m-d"|default:"-" }}
+  </p>
+</div>
+
+<!-- Parent/Guardian(s) -->
+<div class="bg-white/10 rounded-xl p-6 border border-white/20">
+  <div class="flex items-center justify-between mb-2">
+    <h3 class="text-lg font-semibold text-white">Parent/Guardian(s)</h3>
+    <a href="{% url 'lecturer:add_parent_details' student_profile.id %}"
+       class="text-sm px-2.5 py-1.5 rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition">
+      + Add
+    </a>
   </div>
 
-  <!-- Parent/Guardian(s) -->
-  <div class="bg-white/10 rounded-xl p-6 border border-white/20">
-    <h3 class="text-lg font-semibold text-white mb-2">Parent/Guardian(s)</h3>
-    {% if student_profile.parents.exists %}
-      <ul class="space-y-2">
-        {% for parent in student_profile.parents.all %}
-          <li>
-            <span class="font-semibold">{{ parent.user.full_name }}</span> 
-            <span class="text-gray-400 ml-1">({{ parent.get_roles_list|join:", " }})</span>
-            <span class="text-gray-300 ml-2">Phone: {{ parent.phone_number|default:"-" }}</span>
+  {% with parents_qs=student_profile.parents.all %}
+    {% if parents_qs and parents_qs|length %}
+      <ul class="space-y-3">
+        {% for parent in parents_qs %}
+          <li class="flex items-start gap-3">
+            {% if parent.profile_picture %}
+              <img src="{{ parent.profile_picture.url }}" alt="{{ parent.full_name }}"
+                   class="w-10 h-10 rounded-full object-cover border border-white/20">
+            {% else %}
+              <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
+                {{ parent.full_name|default:"-"|slice:":1" }}
+              </div>
+            {% endif %}
+            <div class="min-w-0">
+              <div class="font-semibold text-white truncate">
+                {{ parent.full_name|default:"-" }}
+                {% with roles_list=parent.get_roles_list %}
+                  {% if roles_list %}
+                    <span class="text-gray-400 ml-1">({{ roles_list|join:", " }})</span>
+                  {% endif %}
+                {% endwith %}
+              </div>
+              <div class="text-gray-300 text-sm">
+                <span class="mr-4">Phone: {{ parent.phone_number|default:"-" }}</span>
+                <span>Email: {{ parent.email|default:"-" }}</span>
+              </div>
+              {% if parent.address %}
+                <div class="text-gray-400 text-sm mt-1 break-words">Address: {{ parent.address }}</div>
+              {% endif %}
+              {% if parent.occupation %}
+                <div class="text-gray-400 text-sm">Occupation: {{ parent.occupation }}</div>
+              {% endif %}
+            </div>
           </li>
         {% endfor %}
       </ul>
     {% else %}
-      <span class="italic text-gray-400">No parent/guardian info.</span>
+      <div class="flex items-center justify-between">
+        <span class="italic text-gray-400">No parent/guardian info.</span>
+        <a href="{% url 'lecturer:manage_parents' student_profile.id %}"
+           class="text-sm text-blue-200 hover:underline">Manage</a>
+      </div>
+    {% endif %}
+  {% endwith %}
+</div>
+
+  <!-- Class Membership -->
+  <div class="bg-white/10 rounded-xl p-6 border border-white/20">
+    <h3 class="text-lg font-semibold text-white mb-2">Class Membership</h3>
+    {% if enrollments %}
+      <ul class="space-y-4">
+        {% for enrollment in enrollments %}
+          <li class="border-b border-white/10 pb-3">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span class="font-semibold text-white">Class Group:</span>
+              <span class="text-blue-200">{{ enrollment.class_group.name }}</span>
+              <span class="text-gray-400">({{ enrollment.class_group.year }})</span>
+              {% if enrollment.class_group.classroom %}
+                <span class="text-gray-400">· Classroom: {{ enrollment.class_group.classroom }}</span>
+              {% endif %}
+            </div>
+            <div>
+              <span class="font-semibold text-white">Course:</span>
+              <span class="text-blue-200">{{ enrollment.class_group.course.name }}</span>
+            </div>
+            <div>
+              <span class="font-semibold text-white">Lecturer(s):</span>
+              {% with lects=enrollment.class_group.lecturers.all %}
+                {% if lects and lects|length %}
+                  <span class="text-blue-200">
+                    {% for lecturer in lects %}
+                      {{ lecturer.user.full_name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                  </span>
+                {% else %}
+                  <span class="text-gray-400 italic">No lecturer assigned</span>
+                {% endif %}
+              {% endwith %}
+            </div>
+            <div>
+              <span class="font-semibold text-white">Enrolled on:</span>
+              <span class="text-gray-300">{{ enrollment.date_enrolled|date:"Y-m-d" }}</span>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <span class="italic text-gray-400">Not enrolled in any class group.</span>
     {% endif %}
   </div>
 
-  <!-- Class Membership -->
-<div class="bg-white/10 rounded-xl p-6 border border-white/20">
-  <h3 class="text-lg font-semibold text-white mb-2">Class Membership</h3>
-  {% if enrollments %}
-    <ul class="space-y-4">
-      {% for enrollment in enrollments %}
-        <li class="border-b border-white/10 pb-2">
-          <div>
-            <span class="font-semibold text-white">Class Group:</span>
-            <span class="text-blue-200">{{ enrollment.class_group.name }}</span>
-            <span class="ml-2 text-gray-400">({{ enrollment.class_group.year }})</span>
-            {% if enrollment.class_group.classroom %}
-              <span class="ml-2 text-gray-400">Classroom: {{ enrollment.class_group.classroom }}</span>
-            {% endif %}
-          </div>
-          <div>
-            <span class="font-semibold text-white">Course:</span>
-            <span class="text-blue-200">{{ enrollment.class_group.course.name }}</span>
-          </div>
-          <div>
-            <span class="font-semibold text-white">Lecturer(s):</span>
-            {% if enrollment.class_group.lecturers.exists %}
-              <span class="text-blue-200">
-                {% for lecturer in enrollment.class_group.lecturers.all %}
-                  {{ lecturer.user.full_name }}{% if not forloop.last %}, {% endif %}
-                {% endfor %}
-              </span>
-            {% else %}
-              <span class="text-gray-400 italic">No lecturer assigned</span>
-            {% endif %}
-          </div>
-          <div>
-            <span class="font-semibold text-white">Enrolled on:</span>
-            <span class="text-gray-300">{{ enrollment.date_enrolled|date:"Y-m-d" }}</span>
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <span class="italic text-gray-400">Not enrolled in any class group.</span>
-  {% endif %}
-</div>
-
-
   <!-- Achievements -->
   <div class="bg-white/10 rounded-xl p-6 border border-white/20">
-    <h3 class="text-lg font-semibold text-white mb-2">Achievements</h3>
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="text-lg font-semibold text-white">Achievements</h3>
+      <a href="{% url 'lecturer:student_achievements' student_profile.id %}"
+         class="text-sm text-blue-200 hover:underline">Open</a>
+    </div>
     {% if student_profile.achievements.exists %}
       <ul class="space-y-2">
         {% for achievement in student_profile.achievements.all %}
@@ -133,7 +204,11 @@
 
   <!-- Disciplinary Actions -->
   <div class="bg-white/10 rounded-xl p-6 border border-white/20">
-    <h3 class="text-lg font-semibold text-white mb-2">Disciplinary Actions</h3>
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="text-lg font-semibold text-white">Disciplinary Actions</h3>
+      <a href="{% url 'lecturer:student_disciplinary_actions' student_profile.id %}"
+         class="text-sm text-blue-200 hover:underline">Open</a>
+    </div>
     {% if student_profile.disciplinary_actions.exists %}
       <ul class="space-y-2">
         {% for action in student_profile.disciplinary_actions.all %}
@@ -150,5 +225,6 @@
       <span class="italic text-gray-400">No disciplinary actions.</span>
     {% endif %}
   </div>
+
 </div>
 {% endblock %}
