@@ -8,7 +8,7 @@
   <!-- Animated Welcome Text -->
   <div class="text-center mb-8 animate-fade-in">
     <h1 class="text-4xl font-bold text-white mb-2 animate-pulse">
-      Welcome to Breyer Student Information System Portal
+      Welcome to Breyer Student Attendance System Portal
     </h1>
   </div>
 
@@ -19,7 +19,7 @@
       <div class="text-center mb-8">
         <img src="{% static 'images/breyer.jpg' %}" alt="Logo" class="mx-auto h-24 w-auto mb-6">
         <h2 class="text-2xl font-bold text-white mb-2">Sign In</h2>
-        <p class="text-gray-300">Access your portal here</p>
+        <p class="text-gray-300">Access your respective portal here</p>
       </div>
 
       <!-- Display Messages -->
@@ -128,11 +128,11 @@
           </button>
         </div>
 
-        <!-- Subtle secondary help (mobile friendly) -->
+        <!-- Subtle secondary help  -->
         <p class="text-center text-sm text-gray-400">
           Trouble signing in?
           <a href="{% url 'accounts:password_reset' %}" class="text-blue-300 hover:text-blue-200 underline underline-offset-2">
-            Reset your password by email here!
+            Forgot password? Reset by email here!
           </a>
         </p>
       </form>
