@@ -81,10 +81,7 @@
 <div class="bg-white/10 rounded-xl p-6 border border-white/20">
   <div class="flex items-center justify-between mb-2">
     <h3 class="text-lg font-semibold text-white">Parent/Guardian(s)</h3>
-    <a href="{% url 'lecturer:add_parent_details' student_profile.id %}"
-       class="text-sm px-2.5 py-1.5 rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition">
-      + Add
-    </a>
+    
   </div>
 
   {% with parents_qs=student_profile.parents.all %}
@@ -180,11 +177,6 @@
 
   <!-- Achievements -->
   <div class="bg-white/10 rounded-xl p-6 border border-white/20">
-    <div class="flex items-center justify-between mb-2">
-      <h3 class="text-lg font-semibold text-white">Achievements</h3>
-      <a href="{% url 'lecturer:student_achievements' student_profile.id %}"
-         class="text-sm text-blue-200 hover:underline">Open</a>
-    </div>
     {% if student_profile.achievements.exists %}
       <ul class="space-y-2">
         {% for achievement in student_profile.achievements.all %}
@@ -204,11 +196,6 @@
 
   <!-- Disciplinary Actions -->
   <div class="bg-white/10 rounded-xl p-6 border border-white/20">
-    <div class="flex items-center justify-between mb-2">
-      <h3 class="text-lg font-semibold text-white">Disciplinary Actions</h3>
-      <a href="{% url 'lecturer:student_disciplinary_actions' student_profile.id %}"
-         class="text-sm text-blue-200 hover:underline">Open</a>
-    </div>
     {% if student_profile.disciplinary_actions.exists %}
       <ul class="space-y-2">
         {% for action in student_profile.disciplinary_actions.all %}
