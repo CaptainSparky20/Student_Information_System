@@ -58,6 +58,13 @@ path('classgroup/<int:pk>/assign-lecturers/', views.assign_lecturer_classgroup, 
     path('departments/add/', views.add_department, name='add_department'),
 
 
+    # Fee management pages
+    path("fees/", views.fee_plan_list, name="fee_plan_list"),
+    path("fees/new/", views.fee_plan_create, name="fee_plan_create"),
+    path("fees/student/<int:student_id>/new/", views.fee_plan_create_for_student, name="fee_plan_create_for_student"),
+    path("fees/plan/<int:plan_id>/", views.fee_plan_detail, name="fee_plan_detail"),
+    path("fees/plan/<int:plan_id>/generate/", views.fee_plan_generate_installments, name="fee_plan_generate_installments"),
+    path("fees/installment/<int:pk>/toggle/", views.installment_toggle_paid, name="installment_toggle_paid"),
 
 
 ]
