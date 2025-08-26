@@ -1,26 +1,32 @@
-{% extends 'lecturer/base_lecturer.html' %}
-
-{% block title %}Class Students & Attendance{% endblock %}
-
-{% block content_inner %}
+{% extends 'lecturer/base_lecturer.html' %} {% block title %}Class Students &
+Attendance{% endblock %} {% block content_inner %}
 <div class="max-w-3xl mx-auto bg-white/10 p-8 rounded-2xl shadow mt-10">
-  <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+  <div
+    class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4"
+  >
     <div>
-      <h2 class="text-2xl font-bold text-white mb-2">Class: {{ classgroup.name }}</h2>
+      <h2 class="text-2xl font-bold text-white mb-2">
+        Class: {{ classgroup.name }}
+      </h2>
       <div class="text-blue-200">
-        <strong>Course:</strong> {{ classgroup.course.name }}<br>
-        <strong>Year:</strong> {{ classgroup.year }}<br>
+        <strong>Course:</strong> {{ classgroup.course.name }}<br />
+        <strong>Year:</strong> {{ classgroup.year }}<br />
         <strong>Classroom:</strong> {{ classgroup.classroom|default:"-" }}
       </div>
     </div>
     <div class="mt-4 md:mt-0 flex gap-2 justify-end">
-      <a href="{% url 'lecturer:export_class_attendance' classgroup.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition shadow">
+      <a
+        href="{% url 'lecturer:export_class_attendance' classgroup.id %}"
+        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition shadow"
+      >
         Export CSV
       </a>
     </div>
   </div>
   <div class="overflow-x-auto">
-    <table class="w-full bg-white/5 rounded-xl shadow border border-white/10 mb-4">
+    <table
+      class="w-full bg-white/5 rounded-xl shadow border border-white/10 mb-4"
+    >
       <thead>
         <tr>
           <th class="p-4 text-left text-white">#</th>
@@ -38,32 +44,46 @@
           <td class="p-4 text-white">{{ forloop.counter }}</td>
           <td class="p-4 flex items-center gap-3">
             {% if row.user.student.profile_picture %}
-              <img src="{{ row.user.student.profile_picture.url }}" alt="Profile"
-                class="w-9 h-9 rounded-full object-cover border-2 border-white/20 shadow" />
+            <img
+              src="{{ row.user.student.profile_picture.url }}"
+              alt="Profile"
+              class="w-9 h-9 rounded-full object-cover border-2 border-white/20 shadow"
+            />
             {% else %}
-              <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-2 border-white/20 text-white font-bold">
-                {{ row.user.get_full_name|first|default:"?" }}
-              </div>
+            <div
+              class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-2 border-white/20 text-white font-bold"
+            >
+              {{ row.user.get_full_name|first|default:"?" }}
+            </div>
             {% endif %}
             <span>{{ row.user.get_full_name }}</span>
           </td>
           <td class="p-4">
-            <a href="mailto:{{ row.email }}" class="text-blue-200 hover:underline">{{ row.email }}</a>
+            <a
+              href="mailto:{{ row.email }}"
+              class="text-blue-200 hover:underline"
+              >{{ row.email }}</a
+            >
           </td>
-          <td class="p-4 text-center text-green-300 font-bold">{{ row.present_count }}</td>
-          <td class="p-4 text-center text-red-300 font-bold">{{ row.absent_count }}</td>
+          <td class="p-4 text-center text-green-300 font-bold">
+            {{ row.present_count }}
+          </td>
+          <td class="p-4 text-center text-red-300 font-bold">
+            {{ row.absent_count }}
+          </td>
           <td class="p-4 text-center text-white">{{ row.total_attendance }}</td>
           <td class="p-4 text-center text-white">
-            {% if row.attendance_percentage is not None %}
-              {{ row.attendance_percentage }}%
-            {% else %}
-              <span class="text-gray-300">N/A</span>
+            {% if row.attendance_percentage is not None %} {{
+            row.attendance_percentage }}% {% else %}
+            <span class="text-gray-300">N/A</span>
             {% endif %}
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="7" class="p-4 text-gray-400 text-center">No students found for this class group.</td>
+          <td colspan="7" class="p-4 text-gray-400 text-center">
+            No students found for this class group.
+          </td>
         </tr>
         {% endfor %}
       </tbody>

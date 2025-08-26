@@ -1,126 +1,241 @@
 {% block dashboard_content %}
-  <!-- Welcome & Overview -->
-  <div class="text-center mb-10">
-    <h2 class="text-3xl font-bold text-white mb-2">Welcome back, Admin!</h2>
-    <p class="text-lg text-gray-300">Here's your management overview.</p>
-  </div>
+<!-- Welcome & Overview -->
+<div class="text-center mb-10">
+  <h2 class="text-3xl font-bold text-white mb-2">Welcome back, Admin!</h2>
+  <p class="text-lg text-gray-300">Here's your management overview.</p>
+</div>
 
-  <!-- Stat Cards Row -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-    <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl shadow-lg p-6 flex flex-col items-start">
-      <span class="text-sm text-indigo-100 font-medium mb-2">Lecturers</span>
-      <span class="text-4xl font-bold text-white">{{ total_lecturers|default:0 }}</span>
-    </div>
-    <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl shadow-lg p-6 flex flex-col items-start">
-      <span class="text-sm text-emerald-100 font-medium mb-2">Students</span>
-      <span class="text-4xl font-bold text-white">{{ total_students|default:0 }}</span>
-    </div>
-    <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-lg p-6 flex flex-col items-start">
-      <span class="text-sm text-blue-100 font-medium mb-2">Courses</span>
-      <span class="text-4xl font-bold text-white">{{ total_courses|default:0 }}</span>
-    </div>
-    <div class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl shadow-lg p-6 flex flex-col items-start">
-      <span class="text-sm text-purple-100 font-medium mb-2">Users</span>
-      <span class="text-4xl font-bold text-white">{{ total_users|default:0 }}</span>
-    </div>
+<!-- Stat Cards Row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+  <div
+    class="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl shadow-lg p-6 flex flex-col items-start"
+  >
+    <span class="text-sm text-indigo-100 font-medium mb-2">Lecturers</span>
+    <span class="text-4xl font-bold text-white"
+      >{{ total_lecturers|default:0 }}</span
+    >
   </div>
+  <div
+    class="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl shadow-lg p-6 flex flex-col items-start"
+  >
+    <span class="text-sm text-emerald-100 font-medium mb-2">Students</span>
+    <span class="text-4xl font-bold text-white"
+      >{{ total_students|default:0 }}</span
+    >
+  </div>
+  <div
+    class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-lg p-6 flex flex-col items-start"
+  >
+    <span class="text-sm text-blue-100 font-medium mb-2">Courses</span>
+    <span class="text-4xl font-bold text-white"
+      >{{ total_courses|default:0 }}</span
+    >
+  </div>
+  <div
+    class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl shadow-lg p-6 flex flex-col items-start"
+  >
+    <span class="text-sm text-purple-100 font-medium mb-2">Users</span>
+    <span class="text-4xl font-bold text-white"
+      >{{ total_users|default:0 }}</span
+    >
+  </div>
+</div>
 
-  <!-- Management Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
-    <!-- Student Management -->
-    <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col">
-      <h3 class="text-xl font-semibold text-white mb-2">Manage Students</h3>
-      <p class="text-gray-300 text-sm mb-4">Oversee student enrollment and manage all student records.</p>
-      <div class="flex gap-2">
-        <a href="{% url 'adminportal:student_list' %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-center">View Students</a>
-        <a href="{% url 'adminportal:add_student' %}" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-center">Add Student</a>
-      </div>
-    </div>
-    <!-- Lecturer Management -->
-    <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col">
-      <h3 class="text-xl font-semibold text-white mb-2">Manage Lecturers</h3>
-      <p class="text-gray-300 text-sm mb-4">Add, view, or manage all lecturers in your institution.</p>
-      <div class="flex gap-2">
-        <a href="{% url 'adminportal:lecturer_list' %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-center">View Lecturers</a>
-        <a href="{% url 'adminportal:add_lecturer' %}" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-center">Add Lecturer</a>
-      </div>
-    </div>
-    <!-- Course Management -->
-    <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col">
-      <h3 class="text-xl font-semibold text-white mb-2">Manage Courses</h3>
-      <p class="text-gray-300 text-sm mb-4">Add new courses, assign lecturers, or view all existing courses.</p>
-      <div class="flex gap-2">
-        <a href="{% url 'adminportal:course_list' %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-center">View Courses</a>
-        <a href="{% url 'adminportal:add_course' %}" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-center">Add Course</a>
-      </div>
-    </div>
-    <!-- Department Management -->
-    <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col">
-      <h3 class="text-xl font-semibold text-white mb-2">Manage Departments</h3>
-      <p class="text-gray-300 text-sm mb-4">Add or view all academic departments.</p>
-      <div class="flex gap-2">
-        <a href="{% url 'adminportal:department_list' %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-center">View Departments</a>
-        <a href="{% url 'adminportal:add_department' %}" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-center">Add Department</a>
-      </div>
-    </div>
-    <!-- Staff Management -->
-    <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col">
-      <h3 class="text-xl font-semibold text-white mb-2">Manage Staff</h3>
-      <p class="text-gray-300 text-sm mb-4">View or add staff members to manage administrative users and support personnel.</p>
-      <div class="flex gap-2">
-        <a href="{% url 'adminportal:staff_list' %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-center">View Staff</a>
-        <a href="{% url 'adminportal:add_staff' %}" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-center">Add Staff</a>
-      </div>
+<!-- Management Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
+  <!-- Student Management -->
+  <div
+    class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col"
+  >
+    <h3 class="text-xl font-semibold text-white mb-2">Manage Students</h3>
+    <p class="text-gray-300 text-sm mb-4">
+      Oversee student enrollment and manage all student records.
+    </p>
+    <div class="flex gap-2">
+      <a
+        href="{% url 'adminportal:student_list' %}"
+        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-center"
+        >View Students</a
+      >
+      <a
+        href="{% url 'adminportal:add_student' %}"
+        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-center"
+        >Add Student</a
+      >
     </div>
   </div>
-
-  <!-- Profile & System Status -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
-    <!-- Profile Section -->
-    <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl max-w-3xl mx-auto">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-2">
-        <h2 class="text-2xl font-semibold text-white">Your Profile</h2>
-        <a href="{% url 'dashboard:profile_update' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all text-center">
-          Edit Profile
-        </a>
-      </div>
-      <div class="grid md:grid-cols-2 gap-4">
-        <div class="bg-white/5 rounded-lg p-4">
-          <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Name</h3>
-          <p class="text-lg text-white">{{ request.user.get_full_name|default:"N/A" }}</p>
-        </div>
-        <div class="bg-white/5 rounded-lg p-4">
-          <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Email</h3>
-          <p class="text-lg text-white">{{ request.user.email }}</p>
-        </div>
-        <div class="bg-white/5 rounded-lg p-4">
-          <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Phone</h3>
-          <p class="text-lg text-white">{{ request.user.phone_number|default:"Not set" }}</p>
-        </div>
-        <div class="bg-white/5 rounded-lg p-4">
-          <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Role</h3>
-          <p class="text-lg text-white">{{ request.user.get_role_display|default:"Admin" }}</p>
-        </div>
-      </div>
+  <!-- Lecturer Management -->
+  <div
+    class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col"
+  >
+    <h3 class="text-xl font-semibold text-white mb-2">Manage Lecturers</h3>
+    <p class="text-gray-300 text-sm mb-4">
+      Add, view, or manage all lecturers in your institution.
+    </p>
+    <div class="flex gap-2">
+      <a
+        href="{% url 'adminportal:lecturer_list' %}"
+        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-center"
+        >View Lecturers</a
+      >
+      <a
+        href="{% url 'adminportal:add_lecturer' %}"
+        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-center"
+        >Add Lecturer</a
+      >
     </div>
+  </div>
+  <!-- Course Management -->
+  <div
+    class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col"
+  >
+    <h3 class="text-xl font-semibold text-white mb-2">Manage Courses</h3>
+    <p class="text-gray-300 text-sm mb-4">
+      Add new courses, assign lecturers, or view all existing courses.
+    </p>
+    <div class="flex gap-2">
+      <a
+        href="{% url 'adminportal:course_list' %}"
+        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-center"
+        >View Courses</a
+      >
+      <a
+        href="{% url 'adminportal:add_course' %}"
+        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-center"
+        >Add Course</a
+      >
+    </div>
+  </div>
+  <!-- Department Management -->
+  <div
+    class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col"
+  >
+    <h3 class="text-xl font-semibold text-white mb-2">Manage Departments</h3>
+    <p class="text-gray-300 text-sm mb-4">
+      Add or view all academic departments.
+    </p>
+    <div class="flex gap-2">
+      <a
+        href="{% url 'adminportal:department_list' %}"
+        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-center"
+        >View Departments</a
+      >
+      <a
+        href="{% url 'adminportal:add_department' %}"
+        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-center"
+        >Add Department</a
+      >
+    </div>
+  </div>
+  <!-- Staff Management -->
+  <div
+    class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col"
+  >
+    <h3 class="text-xl font-semibold text-white mb-2">Manage Staff</h3>
+    <p class="text-gray-300 text-sm mb-4">
+      View or add staff members to manage administrative users and support
+      personnel.
+    </p>
+    <div class="flex gap-2">
+      <a
+        href="{% url 'adminportal:staff_list' %}"
+        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-center"
+        >View Staff</a
+      >
+      <a
+        href="{% url 'adminportal:add_staff' %}"
+        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-center"
+        >Add Staff</a
+      >
+    </div>
+  </div>
+</div>
 
-    <!-- System Status -->
-    <div class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
-      <h3 class="text-lg font-semibold text-white mb-4">System Status</h3>
-      <div class="flex flex-col gap-2">
-        <div class="flex items-center justify-between">
-          <span class="text-gray-300 text-sm">System Status</span>
-          <span class="bg-green-600/30 text-green-200 px-2 py-1 rounded-full text-xs">Online</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="text-gray-300 text-sm">Role</span>
-          <span class="text-white text-sm">{{ request.user.get_role_display }}</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="text-gray-300 text-sm">Last Login</span>
-          <span class="text-white text-sm">{{ request.user.last_login|timesince }} ago</span>
-        </div>
+<!-- Profile & System Status -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
+  <!-- Profile Section -->
+  <div
+    class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl max-w-3xl mx-auto"
+  >
+    <div
+      class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-2"
+    >
+      <h2 class="text-2xl font-semibold text-white">Your Profile</h2>
+      <a
+        href="{% url 'dashboard:profile_update' %}"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all text-center"
+      >
+        Edit Profile
+      </a>
+    </div>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="bg-white/5 rounded-lg p-4">
+        <h3
+          class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1"
+        >
+          Name
+        </h3>
+        <p class="text-lg text-white">
+          {{ request.user.get_full_name|default:"N/A" }}
+        </p>
+      </div>
+      <div class="bg-white/5 rounded-lg p-4">
+        <h3
+          class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1"
+        >
+          Email
+        </h3>
+        <p class="text-lg text-white">{{ request.user.email }}</p>
+      </div>
+      <div class="bg-white/5 rounded-lg p-4">
+        <h3
+          class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1"
+        >
+          Phone
+        </h3>
+        <p class="text-lg text-white">
+          {{ request.user.phone_number|default:"Not set" }}
+        </p>
+      </div>
+      <div class="bg-white/5 rounded-lg p-4">
+        <h3
+          class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1"
+        >
+          Role
+        </h3>
+        <p class="text-lg text-white">
+          {{ request.user.get_role_display|default:"Admin" }}
+        </p>
       </div>
     </div>
   </div>
+
+  <!-- System Status -->
+  <div
+    class="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl"
+  >
+    <h3 class="text-lg font-semibold text-white mb-4">System Status</h3>
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center justify-between">
+        <span class="text-gray-300 text-sm">System Status</span>
+        <span
+          class="bg-green-600/30 text-green-200 px-2 py-1 rounded-full text-xs"
+          >Online</span
+        >
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-gray-300 text-sm">Role</span>
+        <span class="text-white text-sm"
+          >{{ request.user.get_role_display }}</span
+        >
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-gray-300 text-sm">Last Login</span>
+        <span class="text-white text-sm"
+          >{{ request.user.last_login|timesince }} ago</span
+        >
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

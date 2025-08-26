@@ -1,37 +1,34 @@
-{% load static %}
-{% block content %}
+{% load static %} {% block content %}
 <!-- Admin Top Navigation Header -->
-<div class="relative z-[9999] bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/20 dark:border-white/10 shadow-xl mb-8">
+<div
+  class="relative z-[9999] bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/20 dark:border-white/10 shadow-xl mb-8"
+>
   <div class="flex justify-between items-center">
     <!-- Logo and Clickable Dashboard Title -->
     <div class="flex items-center space-x-4">
-      <img src="{% static 'images/breyer.jpg' %}" alt="Breyer Logo" class="h-12 w-auto">
+      <img
+        src="{% static 'images/breyer.jpg' %}"
+        alt="Breyer Logo"
+        class="h-12 w-auto"
+      />
       <div>
-        <a href="{% url 'dashboard:main_dashboard' %}" class="text-2xl font-bold text-white hover:text-blue-400 transition">
-          {% if request.user.role == 'ADMIN' %}
-            Admin Dashboard
-          {% elif request.user.role == 'LECTURER' %}
-            Lecturer Dashboard
-          {% elif request.user.role == 'STUDENT' %}
-            Student Dashboard
-          {% else %}
-            Dashboard
-          {% endif %}
+        <a
+          href="{% url 'dashboard:main_dashboard' %}"
+          class="text-2xl font-bold text-white hover:text-blue-400 transition"
+        >
+          {% if request.user.role == 'ADMIN' %} Admin Dashboard {% elif
+          request.user.role == 'LECTURER' %} Lecturer Dashboard {% elif
+          request.user.role == 'STUDENT' %} Student Dashboard {% else %}
+          Dashboard {% endif %}
         </a>
 
         {# Full Name (Short Name) | fallback to email #}
         <p class="text-gray-300 text-sm">
-          {% with full=request.user.get_full_name|default_if_none:'' short=request.user.get_short_name|default_if_none:'' email=request.user.email %}
-            {% if full %}
-              {{ full }}{% if short and short != full %} ({{ short }}){% endif %}
-            {% else %}
-              {% if short %}
-                {{ short }}
-              {% else %}
-                {{ email }}
-              {% endif %}
-            {% endif %}
-          {% endwith %}
+          {% with full=request.user.get_full_name|default_if_none:''
+          short=request.user.get_short_name|default_if_none:''
+          email=request.user.email %} {% if full %} {{ full }}{% if short and
+          short != full %} ({{ short }}){% endif %} {% else %} {% if short %} {{
+          short }} {% else %} {{ email }} {% endif %} {% endif %} {% endwith %}
         </p>
       </div>
     </div>
@@ -45,55 +42,72 @@
 
       <!-- Profile Menu Wrapper -->
       <div class="relative z-[99999]">
-        <button id="profile-btn" onclick="toggleProfileMenu(event)" class="relative group focus:outline-none">
+        <button
+          id="profile-btn"
+          onclick="toggleProfileMenu(event)"
+          class="relative group focus:outline-none"
+        >
           {% if request.user.profile_picture %}
-            <img src="{{ request.user.profile_picture.url }}" alt="Profile Picture"
-                 class="w-12 h-12 rounded-full object-cover border-2 border-white/20 group-hover:border-blue-400 transition-colors">
+          <img
+            src="{{ request.user.profile_picture.url }}"
+            alt="Profile Picture"
+            class="w-12 h-12 rounded-full object-cover border-2 border-white/20 group-hover:border-blue-400 transition-colors"
+          />
           {% else %}
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-2 border-white/20 group-hover:border-blue-400 transition-colors">
-              <span class="text-white font-semibold text-lg">
-                {% with full=request.user.get_full_name|default_if_none:'' short=request.user.get_short_name|default_if_none:'' email=request.user.email %}
-                  {% if full %}
-                    {{ full|first|upper }}
-                  {% elif short %}
-                    {{ short|first|upper }}
-                  {% else %}
-                    {{ email|first|upper }}
-                  {% endif %}
-                {% endwith %}
-              </span>
-            </div>
+          <div
+            class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-2 border-white/20 group-hover:border-blue-400 transition-colors"
+          >
+            <span class="text-white font-semibold text-lg">
+              {% with full=request.user.get_full_name|default_if_none:''
+              short=request.user.get_short_name|default_if_none:''
+              email=request.user.email %} {% if full %} {{ full|first|upper }}
+              {% elif short %} {{ short|first|upper }} {% else %} {{
+              email|first|upper }} {% endif %} {% endwith %}
+            </span>
+          </div>
           {% endif %}
-          <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+          <div
+            class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"
+          ></div>
         </button>
 
         <!-- Profile Dropdown -->
-<div id="profile-menu" class="hidden absolute right-0 top-14 w-56 rounded-2xl
-  bg-white dark:bg-gray-800
-  border border-gray-200 dark:border-gray-700
-  shadow-2xl ring-1 ring-black/20
-  overflow-hidden z-[999999] transform scale-95 opacity-0 transition-all duration-200 ease-out">
-  <a href="{% url 'dashboard:profile' %}" 
-     class="flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition">
-    {% include "lucide/user.svg" %}<span class="ml-2">My Profile</span>
-  </a>
-  <a href="{% url 'dashboard:profile_update' %}" 
-     class="flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition">
-    {% include "lucide/edit-3.svg" %}<span class="ml-2">Update Profile</span>
-  </a>
-  <a href="{% url 'password_change' %}" 
-     class="flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition">
-    {% include "lucide/key.svg" %}<span class="ml-2">Change Password</span>
-  </a>
-  <form action="{% url 'logout' %}" method="post">
-    {% csrf_token %}
-    <button type="submit" 
-            class="flex items-center w-full px-4 py-3 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-      {% include "lucide/log-out.svg" %}<span class="ml-2">Logout</span>
-    </button>
-  </form>
-</div>
-
+        <div
+          id="profile-menu"
+          class="hidden absolute right-0 top-14 w-56 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl ring-1 ring-black/20 overflow-hidden z-[999999] transform scale-95 opacity-0 transition-all duration-200 ease-out"
+        >
+          <a
+            href="{% url 'dashboard:profile' %}"
+            class="flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition"
+          >
+            {% include "lucide/user.svg" %}<span class="ml-2">My Profile</span>
+          </a>
+          <a
+            href="{% url 'dashboard:profile_update' %}"
+            class="flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition"
+          >
+            {% include "lucide/edit-3.svg" %}<span class="ml-2"
+              >Update Profile</span
+            >
+          </a>
+          <a
+            href="{% url 'password_change' %}"
+            class="flex items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition"
+          >
+            {% include "lucide/key.svg" %}<span class="ml-2"
+              >Change Password</span
+            >
+          </a>
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button
+              type="submit"
+              class="flex items-center w-full px-4 py-3 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            >
+              {% include "lucide/log-out.svg" %}<span class="ml-2">Logout</span>
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -102,38 +116,46 @@
 <script>
   function updateDateTime() {
     const now = new Date();
-    const date = now.toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
-    const time = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true });
-    document.getElementById('current-date').textContent = date;
-    document.getElementById('current-time').textContent = time;
+    const date = now.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const time = now.toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    document.getElementById("current-date").textContent = date;
+    document.getElementById("current-time").textContent = time;
   }
   updateDateTime();
   setInterval(updateDateTime, 1000);
 
-function toggleProfileMenu(e) {
-  e.stopPropagation();
-  const menu = document.getElementById('profile-menu');
-  if (menu.classList.contains('hidden')) {
-    menu.classList.remove('hidden');
-    requestAnimationFrame(() => {
-      menu.classList.remove('scale-95', 'opacity-0');
-      menu.classList.add('scale-100', 'opacity-100');
-    });
-  } else {
-    menu.classList.add('scale-95', 'opacity-0');
-    menu.classList.remove('scale-100', 'opacity-100');
-    setTimeout(() => menu.classList.add('hidden'), 200);
-  }
-}
-
-
-  document.addEventListener('click', (e) => {
-    const menu = document.getElementById('profile-menu');
-    if (!menu.contains(e.target) && !document.getElementById('profile-btn').contains(e.target)) {
-      menu.classList.add('hidden');
+  function toggleProfileMenu(e) {
+    e.stopPropagation();
+    const menu = document.getElementById("profile-menu");
+    if (menu.classList.contains("hidden")) {
+      menu.classList.remove("hidden");
+      requestAnimationFrame(() => {
+        menu.classList.remove("scale-95", "opacity-0");
+        menu.classList.add("scale-100", "opacity-100");
+      });
+    } else {
+      menu.classList.add("scale-95", "opacity-0");
+      menu.classList.remove("scale-100", "opacity-100");
+      setTimeout(() => menu.classList.add("hidden"), 200);
     }
-    
+  }
+
+  document.addEventListener("click", (e) => {
+    const menu = document.getElementById("profile-menu");
+    if (
+      !menu.contains(e.target) &&
+      !document.getElementById("profile-btn").contains(e.target)
+    ) {
+      menu.classList.add("hidden");
+    }
   });
 </script>
-{% block adminportal_content %}{% endblock %}
-{% endblock %}
+{% block adminportal_content %}{% endblock %} {% endblock %}

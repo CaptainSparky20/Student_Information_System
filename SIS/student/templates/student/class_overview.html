@@ -1,9 +1,6 @@
-{% extends "student/base_student.html" %}
-{% load static %}
-
-{% block content_inner %}
+{% extends "student/base_student.html" %} {% load static %} {% block
+content_inner %}
 <div class="max-w-5xl mx-auto px-4 py-8">
-
   <!-- Header -->
   <div class="mb-6">
     <h1 class="text-2xl font-semibold text-white">Class Overview</h1>
@@ -12,79 +9,116 @@
 
   <!-- Class meta + stats -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-
     <!-- Class info -->
     <div class="lg:col-span-2 bg-white/5 border border-white/10 rounded-xl p-5">
       {% if class_group %}
-        <div class="flex items-start justify-between gap-4">
-          <div class="space-y-1">
-            <h2 class="text-lg font-semibold text-white">{{ class_group.name|default:"-" }}</h2>
-            <p class="text-gray-300">
-              Course:
-              <span class="text-white">
-                {{ class_group.course.name|default:"-" }}
-                {% if class_group.course and class_group.course.code %} ({{ class_group.course.code }}){% endif %}
-              </span>
-            </p>
-            <p class="text-gray-300">Department: <span class="text-white">{{ class_group.department.name|default:"-" }}</span></p>
-            <p class="text-gray-300">
-              Year: <span class="text-white">{{ class_group.year|default:"-" }}</span>
-              {% if class_group.classroom %} • Room <span class="text-white">{{ class_group.classroom }}</span>{% endif %}
-            </p>
-          </div>
-
-          <!-- Links -->
-          <div class="shrink-0 space-x-2">
-            {% url 'student:classes' as classes_url %}{% if classes_url %}<a href="{{ classes_url }}" class="inline-block px-3 py-1.5 rounded-lg border border-white/20 text-white text-sm hover:bg-white/10">My Classes</a>{% endif %}
-            {% url 'student:attendance' as attendance_url %}{% if attendance_url %}<a href="{{ attendance_url }}" class="inline-block px-3 py-1.5 rounded-lg border border-white/20 text-white text-sm hover:bg-white/10">Attendance</a>{% endif %}
-            {% url 'student:achievements' as achievements_url %}{% if achievements_url %}<a href="{{ achievements_url }}" class="inline-block px-3 py-1.5 rounded-lg border border-white/20 text-white text-sm hover:bg-white/10">Achievements</a>{% endif %}
-          </div>
+      <div class="flex items-start justify-between gap-4">
+        <div class="space-y-1">
+          <h2 class="text-lg font-semibold text-white">
+            {{ class_group.name|default:"-" }}
+          </h2>
+          <p class="text-gray-300">
+            Course:
+            <span class="text-white">
+              {{ class_group.course.name|default:"-" }} {% if class_group.course
+              and class_group.course.code %} ({{ class_group.course.code }}){%
+              endif %}
+            </span>
+          </p>
+          <p class="text-gray-300">
+            Department:
+            <span class="text-white"
+              >{{ class_group.department.name|default:"-" }}</span
+            >
+          </p>
+          <p class="text-gray-300">
+            Year:
+            <span class="text-white">{{ class_group.year|default:"-" }}</span>
+            {% if class_group.classroom %} • Room
+            <span class="text-white">{{ class_group.classroom }}</span>{% endif
+            %}
+          </p>
         </div>
 
-        <!-- Lecturers -->
-        <div class="mt-5">
-          <h3 class="text-white font-medium mb-2">Lecturers</h3>
-          {% with lects=class_group.lecturers.all %}
-            {% if lects %}
-              <ul class="grid sm:grid-cols-2 gap-3">
-                {% for lec in lects %}
-                  <li class="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3">
-                    {# picture: Lecturer.profile_picture -> User.profile_picture -> initials #}
-                    {% if lec.profile_picture %}
-                      <img src="{{ lec.profile_picture.url }}" alt="{{ lec.user.get_full_name|default:'Lecturer' }}"
-                           class="w-10 h-10 rounded-full object-cover border border-white/20" loading="lazy">
-                    {% elif lec.user.profile_picture %}
-                      <img src="{{ lec.user.profile_picture.url }}" alt="{{ lec.user.get_full_name|default:'Lecturer' }}"
-                           class="w-10 h-10 rounded-full object-cover border border-white/20" loading="lazy">
-                    {% else %}
-                      <div class="w-10 h-10 rounded-full bg-white/10 grid place-items-center border border-white/20">
-                        <span class="text-white text-sm font-semibold">
-                          {{ lec.user.get_full_name|default:lec.user.email|slice:":1"|upper }}
-                        </span>
-                      </div>
-                    {% endif %}
+        <!-- Links -->
+        <div class="shrink-0 space-x-2">
+          {% url 'student:classes' as classes_url %}{% if classes_url %}<a
+            href="{{ classes_url }}"
+            class="inline-block px-3 py-1.5 rounded-lg border border-white/20 text-white text-sm hover:bg-white/10"
+            >My Classes</a
+          >{% endif %} {% url 'student:attendance' as attendance_url %}{% if
+          attendance_url %}<a
+            href="{{ attendance_url }}"
+            class="inline-block px-3 py-1.5 rounded-lg border border-white/20 text-white text-sm hover:bg-white/10"
+            >Attendance</a
+          >{% endif %} {% url 'student:achievements' as achievements_url %}{% if
+          achievements_url %}<a
+            href="{{ achievements_url }}"
+            class="inline-block px-3 py-1.5 rounded-lg border border-white/20 text-white text-sm hover:bg-white/10"
+            >Achievements</a
+          >{% endif %}
+        </div>
+      </div>
 
-                    <div class="flex-1 min-w-0">
-                      <div class="text-white font-medium truncate">
-                        {{ lec.user.get_full_name|default:"Unnamed Lecturer" }}
-                      </div>
-                      {% if lec.user.email %}
-                        <div class="text-gray-400 text-sm truncate">{{ lec.user.email }}</div>
-                      {% endif %}
-                      {% if lec.department %}
-                        <div class="text-gray-500 text-xs mt-1 truncate">Dept: {{ lec.department.name }}</div>
-                      {% endif %}
-                    </div>
-                  </li>
-                {% endfor %}
-              </ul>
+      <!-- Lecturers -->
+      <div class="mt-5">
+        <h3 class="text-white font-medium mb-2">Lecturers</h3>
+        {% with lects=class_group.lecturers.all %} {% if lects %}
+        <ul class="grid sm:grid-cols-2 gap-3">
+          {% for lec in lects %}
+          <li
+            class="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3"
+          >
+            {# picture: Lecturer.profile_picture -> User.profile_picture ->
+            initials #} {% if lec.profile_picture %}
+            <img
+              src="{{ lec.profile_picture.url }}"
+              alt="{{ lec.user.get_full_name|default:'Lecturer' }}"
+              class="w-10 h-10 rounded-full object-cover border border-white/20"
+              loading="lazy"
+            />
+            {% elif lec.user.profile_picture %}
+            <img
+              src="{{ lec.user.profile_picture.url }}"
+              alt="{{ lec.user.get_full_name|default:'Lecturer' }}"
+              class="w-10 h-10 rounded-full object-cover border border-white/20"
+              loading="lazy"
+            />
             {% else %}
-              <p class="text-gray-400">No lecturers assigned yet.</p>
+            <div
+              class="w-10 h-10 rounded-full bg-white/10 grid place-items-center border border-white/20"
+            >
+              <span class="text-white text-sm font-semibold">
+                {{
+                lec.user.get_full_name|default:lec.user.email|slice:":1"|upper
+                }}
+              </span>
+            </div>
             {% endif %}
-          {% endwith %}
-        </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="text-white font-medium truncate">
+                {{ lec.user.get_full_name|default:"Unnamed Lecturer" }}
+              </div>
+              {% if lec.user.email %}
+              <div class="text-gray-400 text-sm truncate">
+                {{ lec.user.email }}
+              </div>
+              {% endif %} {% if lec.department %}
+              <div class="text-gray-500 text-xs mt-1 truncate">
+                Dept: {{ lec.department.name }}
+              </div>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-gray-400">No lecturers assigned yet.</p>
+        {% endif %} {% endwith %}
+      </div>
       {% else %}
-        <p class="text-gray-400">You’re not assigned to a class yet.</p>
+      <p class="text-gray-400">You’re not assigned to a class yet.</p>
       {% endif %}
     </div>
 
@@ -92,11 +126,15 @@
     <div class="space-y-4">
       <div class="bg-white/5 border border-white/10 rounded-xl p-5">
         <p class="text-gray-300 text-sm">Subjects</p>
-        <p class="text-2xl font-semibold text-white">{{ subjects|length|default:0 }}</p>
+        <p class="text-2xl font-semibold text-white">
+          {{ subjects|length|default:0 }}
+        </p>
       </div>
       <div class="bg-white/5 border border-white/10 rounded-xl p-5">
         <p class="text-gray-300 text-sm">Classmates</p>
-        <p class="text-2xl font-semibold text-white">{{ classmates|length|default:0 }}</p>
+        <p class="text-2xl font-semibold text-white">
+          {{ classmates|length|default:0 }}
+        </p>
       </div>
     </div>
   </div>
@@ -105,32 +143,37 @@
   <div class="bg-white/5 border border-white/10 rounded-xl p-5 mb-6">
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-lg font-semibold text-white">Subjects</h2>
-      {% url 'student:classes' as classes_url %}{% if classes_url %}<a href="{{ classes_url }}" class="text-sm text-indigo-300 hover:text-indigo-200 underline">View all</a>{% endif %}
+      {% url 'student:classes' as classes_url %}{% if classes_url %}<a
+        href="{{ classes_url }}"
+        class="text-sm text-indigo-300 hover:text-indigo-200 underline"
+        >View all</a
+      >{% endif %}
     </div>
 
     {% if subjects %}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {% for s in subjects %}
-          <div class="bg-white/5 border border-white/10 rounded-lg p-4">
-            <p class="text-white">
-              {{ s.name }}
-              {% if s.code %}<span class="text-gray-400 text-sm">({{ s.code }})</span>{% endif %}
-            </p>
-            {% with llist=s.lecturers.all %}
-              {% if llist %}
-                <p class="text-gray-400 text-xs mt-2">Lecturers:</p>
-                <ul class="mt-1 space-y-0.5">
-                  {% for lec in llist %}
-                    <li class="text-gray-200 text-sm">• {{ lec.user.get_full_name|default:lec.user.email }}</li>
-                  {% endfor %}
-                </ul>
-              {% endif %}
-            {% endwith %}
-          </div>
-        {% endfor %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {% for s in subjects %}
+      <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+        <p class="text-white">
+          {{ s.name }} {% if s.code %}<span class="text-gray-400 text-sm"
+            >({{ s.code }})</span
+          >{% endif %}
+        </p>
+        {% with llist=s.lecturers.all %} {% if llist %}
+        <p class="text-gray-400 text-xs mt-2">Lecturers:</p>
+        <ul class="mt-1 space-y-0.5">
+          {% for lec in llist %}
+          <li class="text-gray-200 text-sm">
+            • {{ lec.user.get_full_name|default:lec.user.email }}
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %} {% endwith %}
       </div>
+      {% endfor %}
+    </div>
     {% else %}
-      <p class="text-gray-400">No subjects found for this class.</p>
+    <p class="text-gray-400">No subjects found for this class.</p>
     {% endif %}
   </div>
 
@@ -138,45 +181,62 @@
   <div class="bg-white/5 border border-white/10 rounded-xl p-5">
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-lg font-semibold text-white">Classmates</h2>
-      {% url 'student:classes' as classes_url %}{% if classes_url %}<a href="{{ classes_url }}" class="text-sm text-indigo-300 hover:text-indigo-200 underline">View all</a>{% endif %}
+      {% url 'student:classes' as classes_url %}{% if classes_url %}<a
+        href="{{ classes_url }}"
+        class="text-sm text-indigo-300 hover:text-indigo-200 underline"
+        >View all</a
+      >{% endif %}
     </div>
 
     {% if classmates %}
-      <ul class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {% for s in classmates|slice:":9" %}
-          <li class="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3">
-            {# picture: Student.profile_picture -> User.profile_picture -> initials #}
-            {% if s.profile_picture %}
-              <img src="{{ s.profile_picture.url }}" alt="{{ s.user.get_full_name|default:'Student' }}"
-                   class="w-10 h-10 rounded-full object-cover border border-white/20" loading="lazy">
-            {% elif s.user.profile_picture %}
-              <img src="{{ s.user.profile_picture.url }}" alt="{{ s.user.get_full_name|default:'Student' }}"
-                   class="w-10 h-10 rounded-full object-cover border border-white/20" loading="lazy">
-            {% else %}
-              <div class="w-10 h-10 rounded-full bg-white/10 grid place-items-center border border-white/20">
-                <span class="text-white text-sm font-semibold">
-                  {{ s.user.get_full_name|default:s.user.email|slice:":1"|upper }}
-                </span>
-              </div>
-            {% endif %}
+    <ul class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {% for s in classmates|slice:":9" %}
+      <li
+        class="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3"
+      >
+        {# picture: Student.profile_picture -> User.profile_picture -> initials
+        #} {% if s.profile_picture %}
+        <img
+          src="{{ s.profile_picture.url }}"
+          alt="{{ s.user.get_full_name|default:'Student' }}"
+          class="w-10 h-10 rounded-full object-cover border border-white/20"
+          loading="lazy"
+        />
+        {% elif s.user.profile_picture %}
+        <img
+          src="{{ s.user.profile_picture.url }}"
+          alt="{{ s.user.get_full_name|default:'Student' }}"
+          class="w-10 h-10 rounded-full object-cover border border-white/20"
+          loading="lazy"
+        />
+        {% else %}
+        <div
+          class="w-10 h-10 rounded-full bg-white/10 grid place-items-center border border-white/20"
+        >
+          <span class="text-white text-sm font-semibold">
+            {{ s.user.get_full_name|default:s.user.email|slice:":1"|upper }}
+          </span>
+        </div>
+        {% endif %}
 
-            <div class="flex-1 min-w-0">
-              <div class="text-white font-medium truncate">
-                {{ s.user.get_full_name|default:"Unnamed Student" }}
-                {% if s.user_id == request.user.id %}<span class="text-xs text-gray-400">(you)</span>{% endif %}
-              </div>
-              <div class="text-gray-400 text-sm truncate">{{ s.user.email }}</div>
-            </div>
-          </li>
-        {% endfor %}
-      </ul>
-      {% if classmates|length > 9 %}
-        <p class="text-gray-400 text-sm mt-2">Showing 9 of {{ classmates|length }} classmates.</p>
-      {% endif %}
-    {% else %}
-      <p class="text-gray-400">No classmates to show.</p>
+        <div class="flex-1 min-w-0">
+          <div class="text-white font-medium truncate">
+            {{ s.user.get_full_name|default:"Unnamed Student" }} {% if s.user_id
+            == request.user.id %}<span class="text-xs text-gray-400">(you)</span
+            >{% endif %}
+          </div>
+          <div class="text-gray-400 text-sm truncate">{{ s.user.email }}</div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if classmates|length > 9 %}
+    <p class="text-gray-400 text-sm mt-2">
+      Showing 9 of {{ classmates|length }} classmates.
+    </p>
+    {% endif %} {% else %}
+    <p class="text-gray-400">No classmates to show.</p>
     {% endif %}
   </div>
-
 </div>
 {% endblock %}

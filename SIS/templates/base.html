@@ -1,61 +1,58 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="scroll-smooth">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}My Site{% endblock %}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  {% block extra_head %}{% endblock %}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}My Site{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% block extra_head %}{% endblock %}
 
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      width: 100vw;
-      background-image: url("{% static 'images/background.jpg' %}");
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: cover;
-      background-attachment: fixed;
-      background-color: #000;
-      overflow-x: hidden;
-    }
-  </style>
-</head>
-<body class="relative min-h-screen bg-gray-900">
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        width: 100vw;
+        background-image: url("{% static 'images/background.jpg' %}");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        background-attachment: fixed;
+        background-color: #000;
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body class="relative min-h-screen bg-gray-900">
+    <!-- Dark Overlay -->
+    <div
+      class="fixed inset-0 -z-10 bg-black bg-opacity-60 pointer-events-none"
+    ></div>
 
-  <!-- Dark Overlay -->
-  <div class="fixed inset-0 -z-10 bg-black bg-opacity-60 pointer-events-none"></div>
-
-  <!-- Flash Messages -->
-  {% if messages %}
+    <!-- Flash Messages -->
+    {% if messages %}
     <div class="max-w-4xl mx-auto mt-6 px-4 w-full">
       {% for message in messages %}
-        <div class="mb-4 rounded-lg p-4 shadow
-            {% if message.tags %}
-              {% if 'error' in message.tags %} bg-red-100 text-red-700
-              {% elif 'success' in message.tags %} bg-green-100 text-green-700
-              {% elif 'warning' in message.tags %} bg-yellow-100 text-yellow-700
-              {% else %} bg-blue-100 text-blue-700
-              {% endif %}
-            {% else %} bg-gray-100 text-gray-700
-            {% endif %}
-          " role="alert">
-          {{ message }}
-        </div>
+      <div
+        class="mb-4 rounded-lg p-4 shadow {% if message.tags %} {% if 'error' in message.tags %} bg-red-100 text-red-700 {% elif 'success' in message.tags %} bg-green-100 text-green-700 {% elif 'warning' in message.tags %} bg-yellow-100 text-yellow-700 {% else %} bg-blue-100 text-blue-700 {% endif %} {% else %} bg-gray-100 text-gray-700 {% endif %}"
+        role="alert"
+      >
+        {{ message }}
+      </div>
       {% endfor %}
     </div>
-  {% endif %}
+    {% endif %}
 
-  <!-- Main Content Block -->
-  {% block content %}
-  <!-- Child templates insert content here -->
-  {% endblock %}
+    <!-- Main Content Block -->
+    {% block content %}
+    <!-- Child templates insert content here -->
+    {% endblock %}
 
-  <!-- Footer -->
-  <footer class="mt-8 w-full max-w-6xl text-center text-gray-300 text-sm font-medium select-none py-4">
-    &copy; {{ now|date:"Y" }} FYP Project CS4D
-  </footer>
-</body>
+    <!-- Footer -->
+    <footer
+      class="mt-8 w-full max-w-6xl text-center text-gray-300 text-sm font-medium select-none py-4"
+    >
+      &copy; {{ now|date:"Y" }} FYP Project CS4D
+    </footer>
+  </body>
 </html>

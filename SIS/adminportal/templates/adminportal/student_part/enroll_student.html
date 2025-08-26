@@ -1,40 +1,53 @@
-{% extends 'adminportal/base_adminportal.html' %}
-{% load static %}
-
-{% block title %}Enroll {{ student.user.full_name }} in a Class Group{% endblock %}
-
-{% block content_inner %}
-<div class="max-w-lg mx-auto mt-12 bg-white/10 rounded-2xl shadow-lg p-8 border border-white/20">
-    <h2 class="text-2xl font-bold text-white mb-4">Enroll Student</h2>
-    <p class="text-white mb-6">
-        Enrolling: <span class="font-semibold">{{ student.user.full_name }}</span>
-    </p>
-    {% if messages %}
-      {% for message in messages %}
-        <div class="bg-red-600/90 text-white rounded-lg shadow p-2 mb-3 animate-fade-in">
-          {{ message }}
-        </div>
-      {% endfor %}
-    {% endif %}
-    <form method="POST" class="space-y-6">
-        {% csrf_token %}
-        <div>
-            <label for="class_group" class="block text-white mb-2">Select Class Group</label>
-            <select id="class_group" name="class_group" class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-600" required>
-                <option value="">-- Select Class Group --</option>
-                {% for classgroup in classgroups %}
-                <option value="{{ classgroup.id }}">
-                  {{ classgroup.name }} ({{ classgroup.year }})
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="flex justify-end gap-2">
-            <a href="{% url 'adminportal:student_list' %}" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 rounded-lg text-white">Cancel</a>
-            <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white font-semibold">
-                Enroll
-            </button>
-        </div>
-    </form>
+{% extends 'adminportal/base_adminportal.html' %} {% load static %} {% block
+title %}Enroll {{ student.user.full_name }} in a Class Group{% endblock %} {%
+block content_inner %}
+<div
+  class="max-w-lg mx-auto mt-12 bg-white/10 rounded-2xl shadow-lg p-8 border border-white/20"
+>
+  <h2 class="text-2xl font-bold text-white mb-4">Enroll Student</h2>
+  <p class="text-white mb-6">
+    Enrolling: <span class="font-semibold">{{ student.user.full_name }}</span>
+  </p>
+  {% if messages %} {% for message in messages %}
+  <div
+    class="bg-red-600/90 text-white rounded-lg shadow p-2 mb-3 animate-fade-in"
+  >
+    {{ message }}
+  </div>
+  {% endfor %} {% endif %}
+  <form method="POST" class="space-y-6">
+    {% csrf_token %}
+    <div>
+      <label for="class_group" class="block text-white mb-2"
+        >Select Class Group</label
+      >
+      <select
+        id="class_group"
+        name="class_group"
+        class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-600"
+        required
+      >
+        <option value="">-- Select Class Group --</option>
+        {% for classgroup in classgroups %}
+        <option value="{{ classgroup.id }}">
+          {{ classgroup.name }} ({{ classgroup.year }})
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex justify-end gap-2">
+      <a
+        href="{% url 'adminportal:student_list' %}"
+        class="px-4 py-2 bg-gray-500 hover:bg-gray-600 rounded-lg text-white"
+        >Cancel</a
+      >
+      <button
+        type="submit"
+        class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white font-semibold"
+      >
+        Enroll
+      </button>
+    </div>
+  </form>
 </div>
 {% endblock %}

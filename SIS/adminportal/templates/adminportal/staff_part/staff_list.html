@@ -1,13 +1,15 @@
-{% extends 'adminportal/base_adminportal.html' %}
-{% load static %}
-
-{% block title %}Manage Staff{% endblock %}
-
-{% block content_inner %}
-<div class="max-w-4xl mx-auto bg-white/10 rounded-2xl p-8 border border-white/20 shadow-xl mt-10">
+{% extends 'adminportal/base_adminportal.html' %} {% load static %} {% block
+title %}Manage Staff{% endblock %} {% block content_inner %}
+<div
+  class="max-w-4xl mx-auto bg-white/10 rounded-2xl p-8 border border-white/20 shadow-xl mt-10"
+>
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold text-white">Staff List</h1>
-    <a href="{% url 'adminportal:add_staff' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow font-bold transition">Add Staff</a>
+    <a
+      href="{% url 'adminportal:add_staff' %}"
+      class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow font-bold transition"
+      >Add Staff</a
+    >
   </div>
 
   <div class="overflow-x-auto">
@@ -25,14 +27,18 @@
         {% for staff in staff_users %}
         <tr class="hover:bg-white/15 transition">
           <td class="px-4 py-3">{{ forloop.counter }}</td>
-          <td class="px-4 py-3 font-semibold">{{ staff.get_full_name|default:"-" }}</td>
+          <td class="px-4 py-3 font-semibold">
+            {{ staff.get_full_name|default:"-" }}
+          </td>
           <td class="px-4 py-3">{{ staff.email|default:"-" }}</td>
           <td class="px-4 py-3">{{ staff.department.name|default:"-" }}</td>
           <td class="px-4 py-3">{{ staff.date_joined|date:"Y-m-d" }}</td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="5" class="px-4 py-6 text-center text-gray-400">No staff found.</td>
+          <td colspan="5" class="px-4 py-6 text-center text-gray-400">
+            No staff found.
+          </td>
         </tr>
         {% endfor %}
       </tbody>

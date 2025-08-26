@@ -1,48 +1,64 @@
-{% extends 'lecturer/base_lecturer.html' %}
-{% load static %}
-
-{% block title %}Take Attendance{% endblock %}
-
-{% block content_inner %}
-{% if messages %}
-  <div id="msg-confirm" class="mb-6">
-    {% for message in messages %}
-      <div class="bg-emerald-600/90 text-white rounded-lg shadow p-4 flex items-center justify-between animate-fade-in">
-        <span>{{ message }}</span>
-        <button onclick="this.parentElement.style.display='none'" class="ml-4 text-xl font-bold leading-none" aria-label="Close">&times;</button>
-      </div>
-    {% endfor %}
+{% extends 'lecturer/base_lecturer.html' %} {% load static %} {% block title
+%}Take Attendance{% endblock %} {% block content_inner %} {% if messages %}
+<div id="msg-confirm" class="mb-6">
+  {% for message in messages %}
+  <div
+    class="bg-emerald-600/90 text-white rounded-lg shadow p-4 flex items-center justify-between animate-fade-in"
+  >
+    <span>{{ message }}</span>
+    <button
+      onclick="this.parentElement.style.display='none'"
+      class="ml-4 text-xl font-bold leading-none"
+      aria-label="Close"
+    >
+      &times;
+    </button>
   </div>
-  <script>
-    setTimeout(() => {const msg=document.getElementById("msg-confirm");if(msg)msg.style.display='none';},3500);
-  </script>
+  {% endfor %}
+</div>
+<script>
+  setTimeout(() => {
+    const msg = document.getElementById("msg-confirm");
+    if (msg) msg.style.display = "none";
+  }, 3500);
+</script>
 {% endif %}
 
-<div class="max-w-6xl mx-auto bg-white/10 backdrop-blur-2xl rounded-2xl shadow-2xl p-8 border border-white/30 mb-8 transition-all">
+<div
+  class="max-w-6xl mx-auto bg-white/10 backdrop-blur-2xl rounded-2xl shadow-2xl p-8 border border-white/30 mb-8 transition-all"
+>
   <div class="mb-6 flex flex-col gap-2">
-    <h2 class="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-      <svg class="w-8 h-8 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    <h2
+      class="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3"
+    >
+      <svg
+        class="w-8 h-8 text-emerald-300"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7" />
       </svg>
       Take Attendance
     </h2>
     <div class="flex flex-wrap items-center gap-4">
-      <span class="bg-blue-800/80 text-blue-100 font-semibold text-base px-4 py-1 rounded-full shadow border border-blue-400 tracking-wider">
+      <span
+        class="bg-blue-800/80 text-blue-100 font-semibold text-base px-4 py-1 rounded-full shadow border border-blue-400 tracking-wider"
+      >
         Class: {{ classgroup.name|default:"-" }}
       </span>
       <!-- SESSION SEGMENTED TOGGLE -->
-      <div class="flex ml-2 items-center gap-0.5 bg-slate-700/70 rounded-full p-1 shadow-inner border border-slate-500/40">
+      <div
+        class="flex ml-2 items-center gap-0.5 bg-slate-700/70 rounded-full p-1 shadow-inner border border-slate-500/40"
+      >
         {% for sess in session_list %}
-          <a href="?date={{ selected_date }}&session={{ sess }}"
-            class="px-6 py-2 rounded-full font-semibold focus:outline-none focus:ring-2 transition text-base
-                  {% if selected_session == sess %}
-                    bg-indigo-400 text-white shadow font-bold
-                  {% else %}
-                    text-indigo-100 hover:bg-indigo-700/60
-                  {% endif %}"
-            aria-current="{% if selected_session == sess %}page{% endif %}">
-            {{ sess|capfirst }} Session
-          </a>
+        <a
+          href="?date={{ selected_date }}&session={{ sess }}"
+          class="px-6 py-2 rounded-full font-semibold focus:outline-none focus:ring-2 transition text-base {% if selected_session == sess %} bg-indigo-400 text-white shadow font-bold {% else %} text-indigo-100 hover:bg-indigo-700/60 {% endif %}"
+          aria-current="{% if selected_session == sess %}page{% endif %}"
+        >
+          {{ sess|capfirst }} Session
+        </a>
         {% endfor %}
       </div>
     </div>
@@ -51,7 +67,11 @@
   <form method="post">
     {% csrf_token %}
     <div class="flex flex-col sm:flex-row items-center mb-6 gap-4">
-      <label for="attendance-date" class="text-white font-medium whitespace-nowrap">Attendance Date:</label>
+      <label
+        for="attendance-date"
+        class="text-white font-medium whitespace-nowrap"
+        >Attendance Date:</label
+      >
       <input
         id="attendance-date"
         name="date"
@@ -62,11 +82,21 @@
         required
         onchange="this.form.submit()"
       />
-      <input type="hidden" name="session" value="{{ selected_session }}">
-      <input type="hidden" name="save_attendance" value="1">
+      <input type="hidden" name="session" value="{{ selected_session }}" />
+      <input type="hidden" name="save_attendance" value="1" />
       <div class="relative w-full sm:w-80 ml-auto">
-        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <span
+          class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
         </span>
         <input
           id="attendance-search"
@@ -89,73 +119,113 @@
           </tr>
         </thead>
         <tbody id="attendance-tbody" class="divide-y divide-white/10">
-          {% if enrollments %}
-            {% for enrollment in enrollments %}
-              <tr>
-                <td class="p-3 text-center">{{ forloop.counter }}</td>
-                <td class="p-3">
-                  <div class="flex items-center gap-3">
-                    {% with sp=enrollment.student.profile_picture up=enrollment.student.user.profile_picture %}
-                      {% if sp %}
-                        <img src="{{ sp.url }}" alt="{{ enrollment.student.user.full_name }} profile"
-                             class="w-9 h-9 rounded-full object-cover border-2 border-white/30 shadow-sm">
-                      {% elif up %}
-                        <img src="{{ up.url }}" alt="{{ enrollment.student.user.full_name }} profile"
-                             class="w-9 h-9 rounded-full object-cover border-2 border-white/30 shadow-sm">
-                      {% else %}
-                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-purple-600
-                                    flex items-center justify-center border-2 border-white/30 text-white font-bold">
-                          {% with n=enrollment.student.user.full_name|default:enrollment.student.user.email %}
-                            {{ n|slice:":1" }}
-                          {% endwith %}
-                        </div>
-                      {% endif %}
-                    {% endwith %}
-                    <span class="font-semibold">{{ enrollment.student.user.get_full_name }}</span>
-                  </div>
-                </td>
+          {% if enrollments %} {% for enrollment in enrollments %}
+          <tr>
+            <td class="p-3 text-center">{{ forloop.counter }}</td>
+            <td class="p-3">
+              <div class="flex items-center gap-3">
+                {% with sp=enrollment.student.profile_picture
+                up=enrollment.student.user.profile_picture %} {% if sp %}
+                <img
+                  src="{{ sp.url }}"
+                  alt="{{ enrollment.student.user.full_name }} profile"
+                  class="w-9 h-9 rounded-full object-cover border-2 border-white/30 shadow-sm"
+                />
+                {% elif up %}
+                <img
+                  src="{{ up.url }}"
+                  alt="{{ enrollment.student.user.full_name }} profile"
+                  class="w-9 h-9 rounded-full object-cover border-2 border-white/30 shadow-sm"
+                />
+                {% else %}
+                <div
+                  class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-2 border-white/30 text-white font-bold"
+                >
+                  {% with
+                  n=enrollment.student.user.full_name|default:enrollment.student.user.email
+                  %} {{ n|slice:":1" }} {% endwith %}
+                </div>
+                {% endif %} {% endwith %}
+                <span class="font-semibold"
+                  >{{ enrollment.student.user.get_full_name }}</span
+                >
+              </div>
+            </td>
 
-                {% for s in statuses %}
-                  <td class="p-3 text-center">
-                    <input type="radio"
-                           name="status_{{ enrollment.id }}"
-                           value="{{ s }}"
-                           class="scale-125"
-                           id="{{ s }}_{{ enrollment.id }}"
-                           {% if enrollment.attendance_selected_date == s %}checked{% endif %}>
-                  </td>
-                {% endfor %}
-
-                <td class="p-3">
-                  <input type="text" name="remarks_{{ enrollment.id }}" maxlength="255"
-                         placeholder="E.g., Left early, MC"
-                         class="w-full bg-white/20 text-white px-3 py-2 rounded border border-white/20 focus:outline-none focus:ring focus:ring-blue-500"
-                         value="{{ enrollment.remarks|default:'' }}">
-                </td>
-              </tr>
+            {% for s in statuses %}
+            <td class="p-3 text-center">
+              <input
+                type="radio"
+                name="status_{{ enrollment.id }}"
+                value="{{ s }}"
+                class="scale-125"
+                id="{{ s }}_{{ enrollment.id }}"
+                {%
+                if
+                enrollment.attendance_selected_date=""
+                ="s"
+                %}checked{%
+                endif
+                %}
+              />
+            </td>
             {% endfor %}
-          {% else %}
-            <tr>
-              <td colspan="5" class="text-center text-gray-300 p-6">No students found for this class.</td>
-            </tr>
+
+            <td class="p-3">
+              <input
+                type="text"
+                name="remarks_{{ enrollment.id }}"
+                maxlength="255"
+                placeholder="E.g., Left early, MC"
+                class="w-full bg-white/20 text-white px-3 py-2 rounded border border-white/20 focus:outline-none focus:ring focus:ring-blue-500"
+                value="{{ enrollment.remarks|default:'' }}"
+              />
+            </td>
+          </tr>
+          {% endfor %} {% else %}
+          <tr>
+            <td colspan="5" class="text-center text-gray-300 p-6">
+              No students found for this class.
+            </td>
+          </tr>
           {% endif %}
         </tbody>
       </table>
     </div>
 
     {% if enrollments %}
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+    <div
+      class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8"
+    >
       <div class="flex items-center gap-2">
-        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold shadow transition-all duration-200">
+        <button
+          type="submit"
+          class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold shadow transition-all duration-200"
+        >
           Save Attendance
         </button>
-        <a href="{% url 'lecturer:attendance_history' %}" class="inline-block text-blue-400 hover:underline text-base ml-4">
+        <a
+          href="{% url 'lecturer:attendance_history' %}"
+          class="inline-block text-blue-400 hover:underline text-base ml-4"
+        >
           View Past Attendance
         </a>
       </div>
       <div>
-        <button type="button" onclick="markAll('present')" class="bg-green-700 hover:bg-green-800 text-white px-5 py-2 rounded-lg mr-2 font-semibold shadow transition">Mark All Present</button>
-        <button type="button" onclick="markAll('absent')" class="bg-red-700 hover:bg-red-800 text-white px-5 py-2 rounded-lg font-semibold shadow transition">Mark All Absent</button>
+        <button
+          type="button"
+          onclick="markAll('present')"
+          class="bg-green-700 hover:bg-green-800 text-white px-5 py-2 rounded-lg mr-2 font-semibold shadow transition"
+        >
+          Mark All Present
+        </button>
+        <button
+          type="button"
+          onclick="markAll('absent')"
+          class="bg-red-700 hover:bg-red-800 text-white px-5 py-2 rounded-lg font-semibold shadow transition"
+        >
+          Mark All Absent
+        </button>
       </div>
     </div>
     {% endif %}
@@ -163,17 +233,23 @@
 </div>
 
 <script>
-  document.getElementById("attendance-search").addEventListener("keyup", function () {
-    let value = this.value.toLowerCase();
-    document.querySelectorAll("#attendance-tbody tr").forEach(function (row) {
-      let student = row.children[1].innerText.toLowerCase();
-      row.style.display = student.includes(value) ? "" : "none";
+  document
+    .getElementById("attendance-search")
+    .addEventListener("keyup", function () {
+      let value = this.value.toLowerCase();
+      document.querySelectorAll("#attendance-tbody tr").forEach(function (row) {
+        let student = row.children[1].innerText.toLowerCase();
+        row.style.display = student.includes(value) ? "" : "none";
+      });
     });
-  });
   function markAll(status) {
-    document.querySelectorAll('#attendance-tbody input[type="radio"][value="' + status + '"]').forEach(input => {
-      input.checked = true;
-    });
+    document
+      .querySelectorAll(
+        '#attendance-tbody input[type="radio"][value="' + status + '"]',
+      )
+      .forEach((input) => {
+        input.checked = true;
+      });
   }
 </script>
 {% endblock %}

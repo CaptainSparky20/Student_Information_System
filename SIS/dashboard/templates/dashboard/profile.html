@@ -1,152 +1,208 @@
-{% extends 'dashboard/base_profile.html' %}
-{% load widget_tweaks %}
-
-{% block content_inner %}
+{% extends 'dashboard/base_profile.html' %} {% load widget_tweaks %} {% block
+content_inner %}
 <div class="space-y-8">
-
   <!-- Header: avatar + basics + actions -->
-  <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
+  <div
+    class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl"
+  >
     <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
-
       <!-- Avatar -->
       <div class="flex-shrink-0">
-        {% if user.role == "LECTURER" and lecturer and lecturer.profile_picture %}
-          <img src="{{ lecturer.profile_picture.url }}" alt="Profile picture"
-               class="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-lg">
-        {% elif user.role == "STUDENT" and student and student.profile_picture %}
-          <img src="{{ student.profile_picture.url }}" alt="Profile picture"
-               class="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-lg">
+        {% if user.role == "LECTURER" and lecturer and lecturer.profile_picture
+        %}
+        <img
+          src="{{ lecturer.profile_picture.url }}"
+          alt="Profile picture"
+          class="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-lg"
+        />
+        {% elif user.role == "STUDENT" and student and student.profile_picture
+        %}
+        <img
+          src="{{ student.profile_picture.url }}"
+          alt="Profile picture"
+          class="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-lg"
+        />
         {% elif request.user.profile_picture %}
-          <img src="{{ request.user.profile_picture.url }}" alt="Profile picture"
-               class="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-lg">
+        <img
+          src="{{ request.user.profile_picture.url }}"
+          alt="Profile picture"
+          class="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-lg"
+        />
         {% else %}
-          <div class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-600 to-purple-600
-                      flex items-center justify-center border-4 border-white/20 shadow-lg"
-               aria-label="No profile picture" role="img">
-            <span class="text-white text-3xl">
-              {{ request.user.get_full_name|default:request.user.email|slice:":1"|upper }}
-            </span>
-          </div>
+        <div
+          class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-4 border-white/20 shadow-lg"
+          aria-label="No profile picture"
+          role="img"
+        >
+          <span class="text-white text-3xl">
+            {{
+            request.user.get_full_name|default:request.user.email|slice:":1"|upper
+            }}
+          </span>
+        </div>
         {% endif %}
       </div>
 
       <!-- Basic Info + Actions -->
       <div class="flex-grow text-center md:text-left">
         <h2 class="text-3xl font-bold text-white mb-2">
-          {{ request.user.full_name|default:request.user.get_full_name|default:"No Name Set" }}
+          {{
+          request.user.full_name|default:request.user.get_full_name|default:"No
+          Name Set" }}
         </h2>
 
         <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
-          <span class="px-3 py-1 rounded-full text-sm text-white
-            {% if request.user.role == 'ADMIN' %} bg-orange-600
-            {% elif request.user.role == 'LECTURER' %} bg-blue-600
-            {% elif request.user.role == 'STUDENT' %} bg-green-600
-            {% else %} bg-slate-600 {% endif %}">
+          <span
+            class="px-3 py-1 rounded-full text-sm text-white {% if request.user.role == 'ADMIN' %} bg-orange-600 {% elif request.user.role == 'LECTURER' %} bg-blue-600 {% elif request.user.role == 'STUDENT' %} bg-green-600 {% else %} bg-slate-600 {% endif %}"
+          >
             {{ request.user.get_role_display }}
           </span>
 
           {% if request.user.role == 'ADMIN' and request.user.department %}
-            <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm">
-              {{ request.user.department }}
-            </span>
-          {% elif request.user.role == 'LECTURER' and lecturer and lecturer.department %}
-            <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm">
-              {{ lecturer.department.name }}
-            </span>
-          {% elif request.user.role == 'STUDENT' and student and student.class_group %}
-            <span class="bg-teal-600 text-white px-3 py-1 rounded-full text-sm">
-              {{ student.class_group }}
-            </span>
+          <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm">
+            {{ request.user.department }}
+          </span>
+          {% elif request.user.role == 'LECTURER' and lecturer and
+          lecturer.department %}
+          <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm">
+            {{ lecturer.department.name }}
+          </span>
+          {% elif request.user.role == 'STUDENT' and student and
+          student.class_group %}
+          <span class="bg-teal-600 text-white px-3 py-1 rounded-full text-sm">
+            {{ student.class_group }}
+          </span>
           {% endif %}
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-          <a href="{% url 'dashboard:profile_update' %}"
-             class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors
-                    flex items-center justify-center">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        <div
+          class="flex flex-col sm:flex-row gap-3 justify-center md:justify-start"
+        >
+          <a
+            href="{% url 'dashboard:profile_update' %}"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
             </svg>
             Edit Profile
           </a>
-          <a href="{% url 'dashboard:main_dashboard' %}"
-             class="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg transition-colors
-                    border border-white/20 flex items-center justify-center">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2V7"/>
+          <a
+            href="{% url 'dashboard:main_dashboard' %}"
+            class="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg transition-colors border border-white/20 flex items-center justify-center"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2V7"
+              />
             </svg>
             Dashboard
           </a>
         </div>
       </div>
-
     </div>
   </div>
 
   <!-- Info Grids -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
     <!-- Personal Info -->
-    <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
-      <h3 class="text-xl font-semibold text-white mb-6">Personal Information</h3>
+    <div
+      class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl"
+    >
+      <h3 class="text-xl font-semibold text-white mb-6">
+        Personal Information
+      </h3>
       <div class="space-y-4">
         <div class="bg-white/5 rounded-lg p-4">
           <h4 class="text-sm text-gray-300 mb-1">Full Name</h4>
-          <p class="text-white">{{ request.user.full_name|default:"Not set" }}</p>
+          <p class="text-white">
+            {{ request.user.full_name|default:"Not set" }}
+          </p>
         </div>
 
         <div class="bg-white/5 rounded-lg p-4">
           <h4 class="text-sm text-gray-300 mb-1">Short Name</h4>
-          <p class="text-white">{{ request.user.short_name|default:"Not set" }}</p>
+          <p class="text-white">
+            {{ request.user.short_name|default:"Not set" }}
+          </p>
         </div>
 
         <div class="bg-white/5 rounded-lg p-4">
           <h4 class="text-sm text-gray-300 mb-1">IC/Identity Card Number</h4>
-          <p class="text-white">{{ request.user.identity_card_number|default:"Not set" }}</p>
+          <p class="text-white">
+            {{ request.user.identity_card_number|default:"Not set" }}
+          </p>
         </div>
 
         <div class="bg-white/5 rounded-lg p-4">
           <h4 class="text-sm text-gray-300 mb-1">Phone Number</h4>
           {% if request.user.role == 'LECTURER' and lecturer %}
-            <p class="text-white">{{ lecturer.phone_number|default:"Not set" }}</p>
+          <p class="text-white">
+            {{ lecturer.phone_number|default:"Not set" }}
+          </p>
           {% elif request.user.role == 'STUDENT' and student %}
-            <p class="text-white">{{ student.phone_number|default:"Not set" }}</p>
+          <p class="text-white">{{ student.phone_number|default:"Not set" }}</p>
           {% else %}
-            <p class="text-white">{{ request.user.phone_number|default:"Not set" }}</p>
+          <p class="text-white">
+            {{ request.user.phone_number|default:"Not set" }}
+          </p>
           {% endif %}
         </div>
 
         {% if request.user.role != 'STUDENT' %}
-          <div class="bg-white/5 rounded-lg p-4">
-            <h4 class="text-sm text-gray-300 mb-1">Department</h4>
-            {% if request.user.role == 'LECTURER' and lecturer %}
-              <p class="text-white">{{ lecturer.department.name|default:"Not set" }}</p>
-            {% else %}
-              <p class="text-white">{{ request.user.department|default:"Not set" }}</p>
-            {% endif %}
-          </div>
-        {% endif %}
+        <div class="bg-white/5 rounded-lg p-4">
+          <h4 class="text-sm text-gray-300 mb-1">Department</h4>
+          {% if request.user.role == 'LECTURER' and lecturer %}
+          <p class="text-white">
+            {{ lecturer.department.name|default:"Not set" }}
+          </p>
+          {% else %}
+          <p class="text-white">
+            {{ request.user.department|default:"Not set" }}
+          </p>
+          {% endif %}
+        </div>
+        {% endif %} {% if request.user.role == 'STUDENT' and student %}
+        <div class="bg-white/5 rounded-lg p-4">
+          <h4 class="text-sm text-gray-300 mb-1">Class Group</h4>
+          <p class="text-white">{{ student.class_group|default:"Not set" }}</p>
+        </div>
 
-        {% if request.user.role == 'STUDENT' and student %}
-          <div class="bg-white/5 rounded-lg p-4">
-            <h4 class="text-sm text-gray-300 mb-1">Class Group</h4>
-            <p class="text-white">{{ student.class_group|default:"Not set" }}</p>
-          </div>
-
-          <div class="bg-white/5 rounded-lg p-4">
-            <h4 class="text-sm text-gray-300 mb-1">Date of Birth</h4>
-            <p class="text-white">
-              {% if student.date_of_birth %}{{ student.date_of_birth|date:"F j, Y" }}{% else %}Not set{% endif %}
-            </p>
-          </div>
+        <div class="bg-white/5 rounded-lg p-4">
+          <h4 class="text-sm text-gray-300 mb-1">Date of Birth</h4>
+          <p class="text-white">
+            {% if student.date_of_birth %}{{ student.date_of_birth|date:"F j, Y"
+            }}{% else %}Not set{% endif %}
+          </p>
+        </div>
         {% endif %}
       </div>
     </div>
 
     <!-- Contact Info -->
-    <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
+    <div
+      class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl"
+    >
       <h3 class="text-xl font-semibold text-white mb-6">Contact Information</h3>
       <div class="space-y-4">
         <div class="bg-white/5 rounded-lg p-4">
@@ -157,76 +213,92 @@
         <div class="bg-white/5 rounded-lg p-4">
           <h4 class="text-sm text-gray-300 mb-1">Address</h4>
           {% if request.user.role == 'LECTURER' and lecturer %}
-            <p class="text-white">{{ lecturer.address|default:"Not set" }}</p>
+          <p class="text-white">{{ lecturer.address|default:"Not set" }}</p>
           {% elif request.user.role == 'STUDENT' and student %}
-            <p class="text-white">{{ student.address|default:"Not set" }}</p>
+          <p class="text-white">{{ student.address|default:"Not set" }}</p>
           {% else %}
-            <p class="text-white">{{ request.user.address|default:"Not set" }}</p>
+          <p class="text-white">{{ request.user.address|default:"Not set" }}</p>
           {% endif %}
         </div>
 
         <div class="bg-white/5 rounded-lg p-4">
           <h4 class="text-sm text-gray-300 mb-1">Date Joined</h4>
           <p class="text-white">
-            {% if request.user.date_joined %}{{ request.user.date_joined|date:"F j, Y" }}{% else %}Not set{% endif %}
+            {% if request.user.date_joined %}{{ request.user.date_joined|date:"F
+            j, Y" }}{% else %}Not set{% endif %}
           </p>
         </div>
       </div>
     </div>
-
   </div>
 
   <!-- Parents / Guardians -->
   {% if request.user.role == 'STUDENT' and student %}
-    <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
-      <h3 class="text-xl font-semibold text-white mb-6">Guardians / Parents</h3>
+  <div
+    class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl"
+  >
+    <h3 class="text-xl font-semibold text-white mb-6">Guardians / Parents</h3>
 
-      {% if student.parents.all|length %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {% for parent in student.parents.all %}
-            <div class="bg-white/5 rounded-lg p-4 flex gap-4">
-              <div>
-                {% if parent.profile_picture %}
-                  <img src="{{ parent.profile_picture.url }}" alt="{{ parent.full_name|default:'Guardian' }}"
-                       class="w-16 h-16 rounded-full object-cover border-2 border-white/30 mb-2">
-                {% else %}
-                  <div class="w-16 h-16 rounded-full bg-white/10 border-2 border-white/30 mb-2 grid place-items-center">
-                    <span class="text-white font-semibold">
-                      {{ parent.full_name|default:parent.email|default:"?"|slice:":1"|upper }}
-                    </span>
-                  </div>
-                {% endif %}
-              </div>
-
-              <div>
-                <h4 class="text-lg text-white font-semibold mb-1">
-                  {{ parent.full_name|default:"No Name Set" }}
-                </h4>
-                <p class="text-gray-300 text-sm mb-1">
-                  <span class="font-semibold">Relationship:</span>
-                  {{ parent.get_roles_list|join:", " }}
-                </p>
-                <p class="text-gray-300 text-sm mb-1">
-                  <span class="font-semibold">Phone:</span> {{ parent.phone_number|default:"Not set" }}
-                </p>
-                <p class="text-gray-300 text-sm mb-1">
-                  <span class="font-semibold">Occupation:</span> {{ parent.occupation|default:"Not set" }}
-                </p>
-                <p class="text-gray-300 text-sm mb-1">
-                  <span class="font-semibold">Address:</span> {{ parent.address|default:"Not set" }}
-                </p>
-              </div>
-            </div>
-          {% endfor %}
+    {% if student.parents.all|length %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {% for parent in student.parents.all %}
+      <div class="bg-white/5 rounded-lg p-4 flex gap-4">
+        <div>
+          {% if parent.profile_picture %}
+          <img
+            src="{{ parent.profile_picture.url }}"
+            alt="{{ parent.full_name|default:'Guardian' }}"
+            class="w-16 h-16 rounded-full object-cover border-2 border-white/30 mb-2"
+          />
+          {% else %}
+          <div
+            class="w-16 h-16 rounded-full bg-white/10 border-2 border-white/30 mb-2 grid place-items-center"
+          >
+            <span class="text-white font-semibold">
+              {{
+              parent.full_name|default:parent.email|default:"?"|slice:":1"|upper
+              }}
+            </span>
+          </div>
+          {% endif %}
         </div>
-      {% else %}
-        <p class="text-white">No guardian/parent information linked to this account.</p>
-      {% endif %}
+
+        <div>
+          <h4 class="text-lg text-white font-semibold mb-1">
+            {{ parent.full_name|default:"No Name Set" }}
+          </h4>
+          <p class="text-gray-300 text-sm mb-1">
+            <span class="font-semibold">Relationship:</span>
+            {{ parent.get_roles_list|join:", " }}
+          </p>
+          <p class="text-gray-300 text-sm mb-1">
+            <span class="font-semibold">Phone:</span> {{
+            parent.phone_number|default:"Not set" }}
+          </p>
+          <p class="text-gray-300 text-sm mb-1">
+            <span class="font-semibold">Occupation:</span> {{
+            parent.occupation|default:"Not set" }}
+          </p>
+          <p class="text-gray-300 text-sm mb-1">
+            <span class="font-semibold">Address:</span> {{
+            parent.address|default:"Not set" }}
+          </p>
+        </div>
+      </div>
+      {% endfor %}
     </div>
+    {% else %}
+    <p class="text-white">
+      No guardian/parent information linked to this account.
+    </p>
+    {% endif %}
+  </div>
   {% endif %}
 
   <!-- Account Details -->
-  <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
+  <div
+    class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl"
+  >
     <h3 class="text-xl font-semibold text-white mb-6">Account Details</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="bg-white/5 rounded-lg p-4">
@@ -236,11 +308,11 @@
       <div class="bg-white/5 rounded-lg p-4">
         <h4 class="text-sm text-gray-300 mb-1">Last Login</h4>
         <p class="text-white">
-          {% if request.user.last_login %}{{ request.user.last_login|timesince }} ago{% else %}Never{% endif %}
+          {% if request.user.last_login %}{{ request.user.last_login|timesince
+          }} ago{% else %}Never{% endif %}
         </p>
       </div>
     </div>
   </div>
-
 </div>
 {% endblock %}

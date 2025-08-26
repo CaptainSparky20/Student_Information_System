@@ -1,19 +1,22 @@
-{% extends 'adminportal/base_adminportal.html' %}
-{% load static %}
-
-{% block title %}Lecturer List{% endblock %}
-
-{% block content_inner %}
-<div class="max-w-7xl mx-auto mt-10 p-6 bg-white/10 rounded-2xl shadow-lg backdrop-blur border border-white/20">
+{% extends 'adminportal/base_adminportal.html' %} {% load static %} {% block
+title %}Lecturer List{% endblock %} {% block content_inner %}
+<div
+  class="max-w-7xl mx-auto mt-10 p-6 bg-white/10 rounded-2xl shadow-lg backdrop-blur border border-white/20"
+>
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-3xl font-bold text-white">Lecturers</h1>
-    <a href="{% url 'adminportal:export_lecturers' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition">
+    <a
+      href="{% url 'adminportal:export_lecturers' %}"
+      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition"
+    >
       Export CSV
     </a>
   </div>
   <!-- Table -->
   <div class="overflow-x-auto">
-    <table class="min-w-full bg-white/5 border border-white/10 rounded-xl text-white">
+    <table
+      class="min-w-full bg-white/5 border border-white/10 rounded-xl text-white"
+    >
       <thead class="bg-white/10 text-left text-sm uppercase font-semibold">
         <tr>
           <th class="p-4">Profile</th>
@@ -31,53 +34,62 @@
         <tr class="border-t border-white/10 hover:bg-white/5 transition">
           <td class="p-4">
             {% if lecturer.profile_picture %}
-              <img src="{{ lecturer.profile_picture.url }}" alt="Profile" class="w-12 h-12 rounded-full object-cover border border-white/20">
+            <img
+              src="{{ lecturer.profile_picture.url }}"
+              alt="Profile"
+              class="w-12 h-12 rounded-full object-cover border border-white/20"
+            />
             {% elif lecturer.user.profile_picture %}
-              <img src="{{ lecturer.user.profile_picture.url }}" alt="Profile" class="w-12 h-12 rounded-full object-cover border border-white/20">
+            <img
+              src="{{ lecturer.user.profile_picture.url }}"
+              alt="Profile"
+              class="w-12 h-12 rounded-full object-cover border border-white/20"
+            />
             {% else %}
-              <div class="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center text-sm font-bold text-white">N/A</div>
+            <div
+              class="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center text-sm font-bold text-white"
+            >
+              N/A
+            </div>
             {% endif %}
           </td>
           <td class="p-4 font-medium">
             {{ lecturer.user.full_name|default:"N/A" }}
           </td>
-          <td class="p-4">
-            {{ lecturer.user.email|default:"-" }}
-          </td>
-          <td class="p-4">
-            {{ lecturer.user.phone_number|default:"-" }}
-          </td>
-          <td class="p-4">
-            {{ lecturer.department.name|default:"-" }}
-          </td>
+          <td class="p-4">{{ lecturer.user.email|default:"-" }}</td>
+          <td class="p-4">{{ lecturer.user.phone_number|default:"-" }}</td>
+          <td class="p-4">{{ lecturer.department.name|default:"-" }}</td>
           <td class="p-4">
             {{ lecturer.user.date_joined|date:"Y-m-d"|default:"-" }}
           </td>
           <td class="p-4">
-            {% for classgroup in lecturer.classgroups.all %}
-              {{ classgroup.name }}{% if not forloop.last %}, {% endif %}
-            {% empty %}
-              <span class="text-gray-400 italic">Not Assigned</span>
+            {% for classgroup in lecturer.classgroups.all %} {{ classgroup.name
+            }}{% if not forloop.last %}, {% endif %} {% empty %}
+            <span class="text-gray-400 italic">Not Assigned</span>
             {% endfor %}
           </td>
           <td class="p-4">
-            {% for subject in lecturer.subjects.all %}
-              {{ subject.name }}{% if not forloop.last %}, {% endif %}
-            {% empty %}
-              <span class="text-gray-400 italic">Not Assigned</span>
+            {% for subject in lecturer.subjects.all %} {{ subject.name }}{% if
+            not forloop.last %}, {% endif %} {% empty %}
+            <span class="text-gray-400 italic">Not Assigned</span>
             {% endfor %}
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="8" class="p-4 text-center text-gray-400">No lecturers found.</td>
+          <td colspan="8" class="p-4 text-center text-gray-400">
+            No lecturers found.
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   <div class="mt-8 text-right">
-    <a href="{% url 'adminportal:add_lecturer' %}" class="inline-block px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">
+    <a
+      href="{% url 'adminportal:add_lecturer' %}"
+      class="inline-block px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition"
+    >
       + Add New Lecturer
     </a>
   </div>

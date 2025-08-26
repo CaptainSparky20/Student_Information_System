@@ -1,43 +1,44 @@
-{% extends "student/base_student.html" %}
-
-{% block title %}Attendance • {{ class_group.name }} ({{ class_group.course.code }}){% endblock %}
-
-{% block content_inner %}
+{% extends "student/base_student.html" %} {% block title %}Attendance • {{
+class_group.name }} ({{ class_group.course.code }}){% endblock %} {% block
+content_inner %}
 <div class="space-y-6">
-
   <!-- Header + Toggle -->
   <div class="flex items-center justify-between flex-wrap gap-3">
     <div>
       <h1 class="text-2xl font-bold text-white">Attendance</h1>
       <p class="text-gray-300 text-sm mt-1">
-        {{ class_group.course.name }} • {{ class_group.name }}{% if class_group.year %} • {{ class_group.year }}{% endif %}
+        {{ class_group.course.name }} • {{ class_group.name }}{% if
+        class_group.year %} • {{ class_group.year }}{% endif %}
       </p>
     </div>
 
     <div class="flex items-center gap-2">
-      {# Keep current month in query if present #}
-      {% if year and month %}
-        <a href="?mode=table&y={{ year }}&m={{ month }}"
-           class="px-3 py-1 rounded border text-sm transition
-                  {% if mode == 'table' %}bg-white/20 border-white/30 text-white{% else %}bg-white/10 border-white/20 text-gray-200 hover:bg-white/20{% endif %}">
-          Table
-        </a>
-        <a href="?mode=calendar&y={{ year }}&m={{ month }}"
-           class="px-3 py-1 rounded border text-sm transition
-                  {% if mode == 'calendar' %}bg-white/20 border-white/30 text-white{% else %}bg-white/10 border-white/20 text-gray-200 hover:bg-white/20{% endif %}">
-          Calendar
-        </a>
+      {# Keep current month in query if present #} {% if year and month %}
+      <a
+        href="?mode=table&y={{ year }}&m={{ month }}"
+        class="px-3 py-1 rounded border text-sm transition {% if mode == 'table' %}bg-white/20 border-white/30 text-white{% else %}bg-white/10 border-white/20 text-gray-200 hover:bg-white/20{% endif %}"
+      >
+        Table
+      </a>
+      <a
+        href="?mode=calendar&y={{ year }}&m={{ month }}"
+        class="px-3 py-1 rounded border text-sm transition {% if mode == 'calendar' %}bg-white/20 border-white/30 text-white{% else %}bg-white/10 border-white/20 text-gray-200 hover:bg-white/20{% endif %}"
+      >
+        Calendar
+      </a>
       {% else %}
-        <a href="?mode=table"
-           class="px-3 py-1 rounded border text-sm transition
-                  {% if mode == 'table' %}bg-white/20 border-white/30 text-white{% else %}bg-white/10 border-white/20 text-gray-200 hover:bg-white/20{% endif %}">
-          Table
-        </a>
-        <a href="?mode=calendar"
-           class="px-3 py-1 rounded border text-sm transition
-                  {% if mode == 'calendar' %}bg-white/20 border-white/30 text-white{% else %}bg-white/10 border-white/20 text-gray-200 hover:bg-white/20{% endif %}">
-          Calendar
-        </a>
+      <a
+        href="?mode=table"
+        class="px-3 py-1 rounded border text-sm transition {% if mode == 'table' %}bg-white/20 border-white/30 text-white{% else %}bg-white/10 border-white/20 text-gray-200 hover:bg-white/20{% endif %}"
+      >
+        Table
+      </a>
+      <a
+        href="?mode=calendar"
+        class="px-3 py-1 rounded border text-sm transition {% if mode == 'calendar' %}bg-white/20 border-white/30 text-white{% else %}bg-white/10 border-white/20 text-gray-200 hover:bg-white/20{% endif %}"
+      >
+        Calendar
+      </a>
       {% endif %}
     </div>
   </div>
@@ -54,7 +55,9 @@
     </div>
     <div class="bg-white/10 border border-white/20 rounded-lg p-3 text-center">
       <div class="text-xs text-gray-300">Rate</div>
-      <div class="text-xl font-semibold text-white">{{ attendance_percentage }}%</div>
+      <div class="text-xl font-semibold text-white">
+        {{ attendance_percentage }}%
+      </div>
     </div>
     <div class="bg-white/10 border border-white/20 rounded-lg p-3 text-center">
       <div class="text-xs text-gray-300">Absences</div>
@@ -64,83 +67,108 @@
 
   <!-- Legend -->
   <div class="text-xs text-gray-400 flex flex-wrap gap-4">
-    <span class="flex items-center gap-1"><span class="text-gray-300">AM/PM:</span> <span class="text-green-400">✔ Present</span></span>
-    <span class="flex items-center gap-1"><span class="text-gray-300"></span> <span class="text-red-400">✘ Absent</span></span>
-    <span class="flex items-center gap-1"><span class="text-gray-300"></span> <span class="text-gray-400">– No record</span></span>
+    <span class="flex items-center gap-1"
+      ><span class="text-gray-300">AM/PM:</span>
+      <span class="text-green-400">✔ Present</span></span
+    >
+    <span class="flex items-center gap-1"
+      ><span class="text-gray-300"></span>
+      <span class="text-red-400">✘ Absent</span></span
+    >
+    <span class="flex items-center gap-1"
+      ><span class="text-gray-300"></span>
+      <span class="text-gray-400">– No record</span></span
+    >
   </div>
 
   {# ====================== TABLE VIEW ====================== #}
   <div class="{% if mode != 'table' %}hidden{% endif %}">
     <div class="bg-white/10 border border-white/20 rounded-lg overflow-hidden">
       {% if daily_rows %}
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
-            <thead class="bg-white/5">
-              <tr class="text-left text-gray-300">
-                <th class="px-4 py-3">Date</th>
-                <th class="px-4 py-3">Attendance (AM / PM)</th>
-                <th class="px-4 py-3">Notes</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-white/10">
-              {% for row in daily_rows %}
-                <tr class="hover:bg-white/5 align-top">
-                  <td class="px-4 py-3 text-white whitespace-nowrap">
-                    {{ row.date|date:"M d, Y" }}
-                  </td>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-white/5">
+            <tr class="text-left text-gray-300">
+              <th class="px-4 py-3">Date</th>
+              <th class="px-4 py-3">Attendance (AM / PM)</th>
+              <th class="px-4 py-3">Notes</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/10">
+            {% for row in daily_rows %}
+            <tr class="hover:bg-white/5 align-top">
+              <td class="px-4 py-3 text-white whitespace-nowrap">
+                {{ row.date|date:"M d, Y" }}
+              </td>
 
-                  <td class="px-4 py-3">
-                    <div class="flex flex-col gap-1">
-                      <!-- AM -->
-                      <div class="flex items-center gap-2">
-                        <span class="text-xs text-gray-300 w-10">AM</span>
-                        {% if row.morning %}
-                          {% if row.morning.status == 'absent' %}
-                            <span class="inline-block text-xs px-2 py-1 rounded border border-red-500/40 text-red-300">✘ Absent</span>
-                          {% else %}
-                            <span class="inline-block text-xs px-2 py-1 rounded border border-green-500/40 text-green-300">✔ Present</span>
-                          {% endif %}
-                        {% else %}
-                          <span class="text-xs text-gray-400">–</span>
-                        {% endif %}
-                      </div>
-                      <!-- PM -->
-                      <div class="flex items-center gap-2">
-                        <span class="text-xs text-gray-300 w-10">PM</span>
-                        {% if row.evening %}
-                          {% if row.evening.status == 'absent' %}
-                            <span class="inline-block text-xs px-2 py-1 rounded border border-red-500/40 text-red-300">✘ Absent</span>
-                          {% else %}
-                            <span class="inline-block text-xs px-2 py-1 rounded border border-green-500/40 text-green-300">✔ Present</span>
-                          {% endif %}
-                        {% else %}
-                          <span class="text-xs text-gray-400">–</span>
-                        {% endif %}
-                      </div>
-                    </div>
-                  </td>
-
-                  <td class="px-4 py-3 text-gray-300">
-                    {% if row.morning and row.morning.description or row.evening and row.evening.description %}
-                      <ul class="space-y-1 list-disc list-inside">
-                        {% if row.morning and row.morning.description %}
-                          <li><span class="text-gray-400">AM:</span> {{ row.morning.description }}</li>
-                        {% endif %}
-                        {% if row.evening and row.evening.description %}
-                          <li><span class="text-gray-400">PM:</span> {{ row.evening.description }}</li>
-                        {% endif %}
-                      </ul>
+              <td class="px-4 py-3">
+                <div class="flex flex-col gap-1">
+                  <!-- AM -->
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-300 w-10">AM</span>
+                    {% if row.morning %} {% if row.morning.status == 'absent' %}
+                    <span
+                      class="inline-block text-xs px-2 py-1 rounded border border-red-500/40 text-red-300"
+                      >✘ Absent</span
+                    >
                     {% else %}
-                      <span class="text-gray-400">–</span>
+                    <span
+                      class="inline-block text-xs px-2 py-1 rounded border border-green-500/40 text-green-300"
+                      >✔ Present</span
+                    >
+                    {% endif %} {% else %}
+                    <span class="text-xs text-gray-400">–</span>
                     {% endif %}
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                  <!-- PM -->
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-300 w-10">PM</span>
+                    {% if row.evening %} {% if row.evening.status == 'absent' %}
+                    <span
+                      class="inline-block text-xs px-2 py-1 rounded border border-red-500/40 text-red-300"
+                      >✘ Absent</span
+                    >
+                    {% else %}
+                    <span
+                      class="inline-block text-xs px-2 py-1 rounded border border-green-500/40 text-green-300"
+                      >✔ Present</span
+                    >
+                    {% endif %} {% else %}
+                    <span class="text-xs text-gray-400">–</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+
+              <td class="px-4 py-3 text-gray-300">
+                {% if row.morning and row.morning.description or row.evening and
+                row.evening.description %}
+                <ul class="space-y-1 list-disc list-inside">
+                  {% if row.morning and row.morning.description %}
+                  <li>
+                    <span class="text-gray-400">AM:</span> {{
+                    row.morning.description }}
+                  </li>
+                  {% endif %} {% if row.evening and row.evening.description %}
+                  <li>
+                    <span class="text-gray-400">PM:</span> {{
+                    row.evening.description }}
+                  </li>
+                  {% endif %}
+                </ul>
+                {% else %}
+                <span class="text-gray-400">–</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
       {% else %}
-        <div class="p-6 text-center text-gray-300">No attendance records yet.</div>
+      <div class="p-6 text-center text-gray-300">
+        No attendance records yet.
+      </div>
       {% endif %}
     </div>
   </div>
@@ -153,11 +181,19 @@
           {{ class_group.course.code }} • {{ class_group.name }}
         </div>
         <div class="flex items-center gap-2">
-          <a href="?mode=calendar&y={{ prev_y }}&m={{ prev_m }}"
-             class="px-3 py-1 rounded bg-white/10 border border-white/20 text-white text-sm hover:bg-white/20">←</a>
-          <div class="text-white text-sm font-medium">{{ month_name }} {{ year }}</div>
-          <a href="?mode=calendar&y={{ next_y }}&m={{ next_m }}"
-             class="px-3 py-1 rounded bg-white/10 border border-white/20 text-white text-sm hover:bg-white/20">→</a>
+          <a
+            href="?mode=calendar&y={{ prev_y }}&m={{ prev_m }}"
+            class="px-3 py-1 rounded bg-white/10 border border-white/20 text-white text-sm hover:bg-white/20"
+            >←</a
+          >
+          <div class="text-white text-sm font-medium">
+            {{ month_name }} {{ year }}
+          </div>
+          <a
+            href="?mode=calendar&y={{ next_y }}&m={{ next_m }}"
+            class="px-3 py-1 rounded bg-white/10 border border-white/20 text-white text-sm hover:bg-white/20"
+            >→</a
+          >
         </div>
       </div>
 
@@ -175,47 +211,63 @@
       <!-- Weeks -->
       <div class="space-y-2">
         {% for week in weeks_data %}
-          <div class="grid grid-cols-7 gap-2">
-            {% for cell in week %}
-              <div class="rounded border border-white/10 p-2 min-h-[90px] {% if cell.in_month %}bg-white/5{% else %}opacity-40{% endif %}">
-                <div class="flex items-center justify-between">
-                  <div class="text-sm text-white">{{ cell.date.day }}</div>
-                  {% if cell.is_today %}
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-white/20 text-white">Today</span>
-                  {% endif %}
-                </div>
+        <div class="grid grid-cols-7 gap-2">
+          {% for cell in week %}
+          <div
+            class="rounded border border-white/10 p-2 min-h-[90px] {% if cell.in_month %}bg-white/5{% else %}opacity-40{% endif %}"
+          >
+            <div class="flex items-center justify-between">
+              <div class="text-sm text-white">{{ cell.date.day }}</div>
+              {% if cell.is_today %}
+              <span
+                class="text-[10px] px-2 py-0.5 rounded bg-white/20 text-white"
+                >Today</span
+              >
+              {% endif %}
+            </div>
 
-                <!-- AM/PM indicators -->
-                <div class="mt-2 flex flex-col gap-1 text-xs">
-                  <div class="flex items-center gap-1">
-                    <span class="text-gray-400">AM:</span>
-                    {% if cell.morning %}
-                      {% if cell.morning.status == 'absent' %}
-                        <span class="text-red-400" title="{{ cell.morning.description|default:'' }}">✘</span>
-                      {% else %}
-                        <span class="text-green-400" title="{{ cell.morning.description|default:'' }}">✔</span>
-                      {% endif %}
-                    {% else %}
-                      <span class="text-gray-500">–</span>
-                    {% endif %}
-                  </div>
-                  <div class="flex items-center gap-1">
-                    <span class="text-gray-400">PM:</span>
-                    {% if cell.evening %}
-                      {% if cell.evening.status == 'absent' %}
-                        <span class="text-red-400" title="{{ cell.evening.description|default:'' }}">✘</span>
-                      {% else %}
-                        <span class="text-green-400" title="{{ cell.evening.description|default:'' }}">✔</span>
-                      {% endif %}
-                    {% else %}
-                      <span class="text-gray-500">–</span>
-                    {% endif %}
-                  </div>
-                </div>
-
+            <!-- AM/PM indicators -->
+            <div class="mt-2 flex flex-col gap-1 text-xs">
+              <div class="flex items-center gap-1">
+                <span class="text-gray-400">AM:</span>
+                {% if cell.morning %} {% if cell.morning.status == 'absent' %}
+                <span
+                  class="text-red-400"
+                  title="{{ cell.morning.description|default:'' }}"
+                  >✘</span
+                >
+                {% else %}
+                <span
+                  class="text-green-400"
+                  title="{{ cell.morning.description|default:'' }}"
+                  >✔</span
+                >
+                {% endif %} {% else %}
+                <span class="text-gray-500">–</span>
+                {% endif %}
               </div>
-            {% endfor %}
+              <div class="flex items-center gap-1">
+                <span class="text-gray-400">PM:</span>
+                {% if cell.evening %} {% if cell.evening.status == 'absent' %}
+                <span
+                  class="text-red-400"
+                  title="{{ cell.evening.description|default:'' }}"
+                  >✘</span
+                >
+                {% else %}
+                <span
+                  class="text-green-400"
+                  title="{{ cell.evening.description|default:'' }}"
+                  >✔</span
+                >
+                {% endif %} {% else %}
+                <span class="text-gray-500">–</span>
+                {% endif %}
+              </div>
+            </div>
           </div>
+          {% endfor %}
+        </div>
         {% endfor %}
       </div>
     </div>
@@ -223,8 +275,10 @@
 
   <!-- Back -->
   <div class="text-center">
-    <a href="{% url 'dashboard:main_dashboard' %}"
-       class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-white/10 hover:bg-white/20 border border-white/20 rounded-md text-white">
+    <a
+      href="{% url 'dashboard:main_dashboard' %}"
+      class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-white/10 hover:bg-white/20 border border-white/20 rounded-md text-white"
+    >
       ← Back
     </a>
   </div>

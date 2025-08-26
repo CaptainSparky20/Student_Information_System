@@ -1,25 +1,37 @@
-{% extends 'dashboard/base_profile.html' %}
-{% load widget_tweaks %}
-
-{% block content_inner %}
+{% extends 'dashboard/base_profile.html' %} {% load widget_tweaks %} {% block
+content_inner %}
 <div class="space-y-8">
-
   <!-- Form Card -->
-  <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-xl">
-    <form method="post" enctype="multipart/form-data" class="space-y-6" id="profile-form" novalidate>
+  <div
+    class="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-xl"
+  >
+    <form
+      method="post"
+      enctype="multipart/form-data"
+      class="space-y-6"
+      id="profile-form"
+      novalidate
+    >
       {% csrf_token %}
 
       <!-- top-level errors -->
       {% if form.non_field_errors %}
-        <div class="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-200">
-          {% for e in form.non_field_errors %}
-            <p class="text-sm">{{ e }}</p>
-          {% endfor %}
-        </div>
+      <div
+        class="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-200"
+      >
+        {% for e in form.non_field_errors %}
+        <p class="text-sm">{{ e }}</p>
+        {% endfor %}
+      </div>
       {% endif %}
 
       <!-- hidden flag for photo removal -->
-      <input type="hidden" name="remove_profile_picture" id="remove_profile_picture" value="0">
+      <input
+        type="hidden"
+        name="remove_profile_picture"
+        id="remove_profile_picture"
+        value="0"
+      />
 
       <!-- Profile Picture Preview + Actions -->
       {% if form.profile_picture %}
@@ -27,57 +39,93 @@
         <div class="relative inline-block">
           <span id="profile-picture-preview">
             {% if request.user.profile_picture %}
-              <img
-                src="{{ request.user.profile_picture.url }}"
-                alt="Profile picture preview"
-                class="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-lg"
-              >
+            <img
+              src="{{ request.user.profile_picture.url }}"
+              alt="Profile picture preview"
+              class="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-lg"
+            />
             {% else %}
-              <div
-                class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-4 border-white/20 shadow-lg"
-                aria-label="No profile picture"
-                role="img"
-              >
-                <span class="text-white text-3xl">
-                  {{ request.user.get_full_name|default:request.user.email|slice:":1"|upper }}
-                </span>
-              </div>
+            <div
+              class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-4 border-white/20 shadow-lg"
+              aria-label="No profile picture"
+              role="img"
+            >
+              <span class="text-white text-3xl">
+                {{
+                request.user.get_full_name|default:request.user.email|slice:":1"|upper
+                }}
+              </span>
+            </div>
             {% endif %}
           </span>
 
           <!-- change photo -->
-          <label for="{{ form.profile_picture.id_for_label }}"
-                 class="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 rounded-full p-2 border-2 border-white shadow-lg cursor-pointer"
-                 title="Change photo">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <label
+            for="{{ form.profile_picture.id_for_label }}"
+            class="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 rounded-full p-2 border-2 border-white shadow-lg cursor-pointer"
+            title="Change photo"
+          >
+            <svg
+              class="w-5 h-5 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
             <!-- custom file input (kept hidden) -->
-            <input id="{{ form.profile_picture.id_for_label }}"
-                   name="{{ form.profile_picture.name }}"
-                   type="file"
-                   class="hidden"
-                   accept="image/*">
+            <input
+              id="{{ form.profile_picture.id_for_label }}"
+              name="{{ form.profile_picture.name }}"
+              type="file"
+              class="hidden"
+              accept="image/*"
+            />
           </label>
         </div>
 
         <!-- helper text + remove button -->
-        <div class="mt-4 flex flex-col sm:flex-row gap-2 justify-center items-center text-center">
+        <div
+          class="mt-4 flex flex-col sm:flex-row gap-2 justify-center items-center text-center"
+        >
           <span class="text-gray-400 text-sm">
             JPG/PNG/GIF ≤ 2MB, up to 1024×1024 px.
           </span>
           {% if request.user.profile_picture %}
-            <button type="button" id="clear-photo-btn"
-                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
-                    title="Remove photo">
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-              Remove Photo
-            </button>
+          <button
+            type="button"
+            id="clear-photo-btn"
+            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+            title="Remove photo"
+          >
+            <svg
+              class="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+            Remove Photo
+          </button>
           {% endif %}
         </div>
       </div>
@@ -85,73 +133,133 @@
 
       <!-- Fields (except profile_picture) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {% for field in form %}
-          {% if field.name != 'profile_picture' %}
-            <div class="{% if field.name == 'address' %}md:col-span-2{% endif %}">
-              <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">
-                {{ field.label }}{% if field.field.required %}<span class="text-red-400">*</span>{% endif %}
-              </label>
-              {{ field|add_class:"w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
-              {% if field.errors %}
-                <ul class="mt-1 space-y-0.5">
-                  {% for error in field.errors %}
-                    <li class="text-red-400 text-sm">{{ error }}</li>
-                  {% endfor %}
-                </ul>
-              {% endif %}
-              {% if field.help_text %}
-                <p class="text-gray-400 text-sm mt-1">{{ field.help_text }}</p>
-              {% endif %}
-            </div>
+        {% for field in form %} {% if field.name != 'profile_picture' %}
+        <div class="{% if field.name == 'address' %}md:col-span-2{% endif %}">
+          <label
+            for="{{ field.id_for_label }}"
+            class="block text-sm font-medium text-gray-300 mb-2"
+          >
+            {{ field.label }}{% if field.field.required %}<span
+              class="text-red-400"
+              >*</span
+            >{% endif %}
+          </label>
+          {{ field|add_class:"w-full px-4 py-3 bg-white/5 border border-white/20
+          rounded-lg text-white placeholder-gray-400 focus:outline-none
+          focus:ring-2 focus:ring-blue-500" }} {% if field.errors %}
+          <ul class="mt-1 space-y-0.5">
+            {% for error in field.errors %}
+            <li class="text-red-400 text-sm">{{ error }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %} {% if field.help_text %}
+          <p class="text-gray-400 text-sm mt-1">{{ field.help_text }}</p>
           {% endif %}
-        {% endfor %}
-
-        {% if request.user.role == 'STUDENT' and student_extra_form %}
-          {% for field in student_extra_form %}
-            <div class="{% if field.name == 'emergency_phone' or field.name == 'class_group' %}md:col-span-2{% endif %}">
-              <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">
-                {{ field.label }}{% if field.field.required %}<span class="text-red-400">*</span>{% endif %}
-              </label>
-              {{ field|add_class:"w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
-              {% if field.errors %}
-                <ul class="mt-1 space-y-0.5">
-                  {% for error in field.errors %}
-                    <li class="text-red-400 text-sm">{{ error }}</li>
-                  {% endfor %}
-                </ul>
-              {% endif %}
-              {% if field.help_text %}
-                <p class="text-gray-400 text-sm mt-1">{{ field.help_text }}</p>
-              {% endif %}
-            </div>
-          {% endfor %}
-        {% endif %}
+        </div>
+        {% endif %} {% endfor %} {% if request.user.role == 'STUDENT' and
+        student_extra_form %} {% for field in student_extra_form %}
+        <div
+          class="{% if field.name == 'emergency_phone' or field.name == 'class_group' %}md:col-span-2{% endif %}"
+        >
+          <label
+            for="{{ field.id_for_label }}"
+            class="block text-sm font-medium text-gray-300 mb-2"
+          >
+            {{ field.label }}{% if field.field.required %}<span
+              class="text-red-400"
+              >*</span
+            >{% endif %}
+          </label>
+          {{ field|add_class:"w-full px-4 py-3 bg-white/5 border border-white/20
+          rounded-lg text-white placeholder-gray-400 focus:outline-none
+          focus:ring-2 focus:ring-blue-500" }} {% if field.errors %}
+          <ul class="mt-1 space-y-0.5">
+            {% for error in field.errors %}
+            <li class="text-red-400 text-sm">{{ error }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %} {% if field.help_text %}
+          <p class="text-gray-400 text-sm mt-1">{{ field.help_text }}</p>
+          {% endif %}
+        </div>
+        {% endfor %} {% endif %}
       </div>
 
       <!-- Actions -->
-      <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-white/20">
-        <button type="submit"
-                class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      <div
+        class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-white/20"
+      >
+        <button
+          type="submit"
+          class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
           </svg>
           Update Profile
         </button>
 
-        <a href="{% url 'dashboard:profile' %}"
-           class="flex-1 bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-lg text-center border border-white/20 flex items-center justify-center">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        <a
+          href="{% url 'dashboard:profile' %}"
+          class="flex-1 bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-lg text-center border border-white/20 flex items-center justify-center"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
           </svg>
           Cancel
         </a>
 
-        <a href="{% url 'password_change' %}"
-           class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-3 px-6 rounded-lg text-center border border-yellow-300 flex items-center justify-center">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c-1.657 0-3 1.343-3 3v1h6v-1c0-1.657-1.343-3-3-3z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 11V7a5 5 0 00-10 0v4"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H5a2 2 0 00-2 2v5a2 2 0 002 2z"/>
+        <a
+          href="{% url 'password_change' %}"
+          class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-3 px-6 rounded-lg text-center border border-yellow-300 flex items-center justify-center"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 11c-1.657 0-3 1.343-3 3v1h6v-1c0-1.657-1.343-3-3-3z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 11V7a5 5 0 00-10 0v4"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H5a2 2 0 00-2 2v5a2 2 0 002 2z"
+            />
           </svg>
           Change Password
         </a>
@@ -160,70 +268,80 @@
   </div>
 
   <!-- Profile Tips -->
-  <div class="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10">
+  <div
+    class="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10"
+  >
     <h3 class="text-lg font-semibold text-white mb-3">Profile Tips</h3>
     <ul class="text-gray-300 text-sm space-y-2">
-      <li class="flex items-start"><span class="w-4 h-4 mr-2 mt-1">*</span>Keep your profile info updated for easier communication.</li>
-      <li class="flex items-start"><span class="w-4 h-4 mr-2 mt-1">*</span>Upload a clear, professional profile photo.</li>
-      <li class="flex items-start"><span class="w-4 h-4 mr-2 mt-1">*</span>Use a strong password and change it regularly.</li>
+      <li class="flex items-start">
+        <span class="w-4 h-4 mr-2 mt-1">*</span>Keep your profile info updated
+        for easier communication.
+      </li>
+      <li class="flex items-start">
+        <span class="w-4 h-4 mr-2 mt-1">*</span>Upload a clear, professional
+        profile photo.
+      </li>
+      <li class="flex items-start">
+        <span class="w-4 h-4 mr-2 mt-1">*</span>Use a strong password and change
+        it regularly.
+      </li>
     </ul>
   </div>
-
 </div>
 
 <!-- JS: preview / clear / size validation -->
 <script>
-(function() {
-  const inputId = '{{ form.profile_picture.id_for_label|escapejs }}';
-  const input = document.getElementById(inputId);
-  const clearBtn = document.getElementById('clear-photo-btn');
-  const preview = document.getElementById('profile-picture-preview');
-  const removeFlag = document.getElementById('remove_profile_picture');
+  (function () {
+    const inputId = "{{ form.profile_picture.id_for_label|escapejs }}";
+    const input = document.getElementById(inputId);
+    const clearBtn = document.getElementById("clear-photo-btn");
+    const preview = document.getElementById("profile-picture-preview");
+    const removeFlag = document.getElementById("remove_profile_picture");
 
-  const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+    const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
-  if (input) {
-    input.addEventListener('change', function(e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
+    if (input) {
+      input.addEventListener("change", function (e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
 
-      // client-side validation
-      if (!file.type.startsWith('image/')) {
-        alert('Please choose an image file.');
-        e.target.value = '';
-        return;
-      }
-      if (file.size > MAX_SIZE) {
-        alert('Image must be 2MB or smaller.');
-        e.target.value = '';
-        return;
-      }
+        // client-side validation
+        if (!file.type.startsWith("image/")) {
+          alert("Please choose an image file.");
+          e.target.value = "";
+          return;
+        }
+        if (file.size > MAX_SIZE) {
+          alert("Image must be 2MB or smaller.");
+          e.target.value = "";
+          return;
+        }
 
-      const reader = new FileReader();
-      reader.onload = function(ev) {
-        if (preview.querySelector('img')) {
-          preview.querySelector('img').src = ev.target.result;
-          preview.querySelector('img').alt = 'Profile picture preview';
-        } else {
-          preview.innerHTML = `
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          if (preview.querySelector("img")) {
+            preview.querySelector("img").src = ev.target.result;
+            preview.querySelector("img").alt = "Profile picture preview";
+          } else {
+            preview.innerHTML = `
             <img src="${ev.target.result}" alt="Profile picture preview"
                  class="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-lg">
           `;
-        }
-      };
-      reader.readAsDataURL(file);
+          }
+        };
+        reader.readAsDataURL(file);
 
-      // a new file was chosen, ensure we keep it
-      if (removeFlag) removeFlag.value = '0';
-    });
-  }
+        // a new file was chosen, ensure we keep it
+        if (removeFlag) removeFlag.value = "0";
+      });
+    }
 
-  if (clearBtn && input && preview) {
-    clearBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      input.value = '';
-      if (removeFlag) removeFlag.value = '1';
-      preview.innerHTML = `
+    if (clearBtn && input && preview) {
+      clearBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        input.value = "";
+        if (removeFlag) removeFlag.value = "1";
+        preview.innerHTML = `
         <div
           class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-4 border-white/20 shadow-lg"
           aria-label="No profile picture" role="img">
@@ -232,8 +350,8 @@
           </span>
         </div>
       `;
-    });
-  }
-})();
+      });
+    }
+  })();
 </script>
 {% endblock %}

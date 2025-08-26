@@ -1,21 +1,30 @@
-{% extends 'adminportal/base_adminportal.html' %}
-{% block title %}Assign Lecturers{% endblock %}
-{% block content_inner %}
-<div class="max-w-xl mx-auto mt-10 p-6 bg-white/10 rounded-xl border border-white/20 text-white">
+{% extends 'adminportal/base_adminportal.html' %} {% block title %}Assign
+Lecturers{% endblock %} {% block content_inner %}
+<div
+  class="max-w-xl mx-auto mt-10 p-6 bg-white/10 rounded-xl border border-white/20 text-white"
+>
   <h1 class="text-2xl font-bold mb-4">Assign Lecturers to {{ course.name }}</h1>
 
   <form method="post">
     {% csrf_token %}
     <div class="mb-4">
-      {{ form.lecturers.label_tag }}
-      {{ form.lecturers }}
-      {% if form.lecturers.errors %}
-        <p class="text-red-400 text-sm">{{ form.lecturers.errors|striptags }}</p>
+      {{ form.lecturers.label_tag }} {{ form.lecturers }} {% if
+      form.lecturers.errors %}
+      <p class="text-red-400 text-sm">{{ form.lecturers.errors|striptags }}</p>
       {% endif %}
     </div>
     <div class="pt-2">
-      <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-white font-semibold">Assign</button>
-      <a href="{% url 'adminportal:course_list' %}" class="ml-4 text-white underline">Cancel</a>
+      <button
+        type="submit"
+        class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-white font-semibold"
+      >
+        Assign
+      </button>
+      <a
+        href="{% url 'adminportal:course_list' %}"
+        class="ml-4 text-white underline"
+        >Cancel</a
+      >
     </div>
   </form>
 </div>

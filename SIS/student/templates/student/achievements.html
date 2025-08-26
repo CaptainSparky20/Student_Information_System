@@ -1,9 +1,6 @@
-{% extends "student/base_student.html" %}
-{% load static %}
-
-{% block content_inner %}
+{% extends "student/base_student.html" %} {% load static %} {% block
+content_inner %}
 <div class="max-w-5xl mx-auto px-4 py-8">
-
   <!-- Header -->
   <div class="mb-6">
     <h1 class="text-2xl font-semibold text-white">
@@ -16,23 +13,24 @@
   <!-- Achievements List -->
   <div class="bg-white/5 border border-white/10 rounded-xl p-5">
     {% if achievements %}
-      <ul class="divide-y divide-white/10">
-        {% for a in achievements %}
-          <li class="py-3">
-            <div class="flex flex-col">
-              <span class="text-white font-medium">{{ a.title }}</span>
-              <span class="text-gray-400 text-sm">{{ a.date_awarded|date:"M d, Y" }}</span>
-              {% if a.description %}
-                <p class="text-gray-300 text-sm mt-1">{{ a.description }}</p>
-              {% endif %}
-            </div>
-          </li>
-        {% endfor %}
-      </ul>
+    <ul class="divide-y divide-white/10">
+      {% for a in achievements %}
+      <li class="py-3">
+        <div class="flex flex-col">
+          <span class="text-white font-medium">{{ a.title }}</span>
+          <span class="text-gray-400 text-sm"
+            >{{ a.date_awarded|date:"M d, Y" }}</span
+          >
+          {% if a.description %}
+          <p class="text-gray-300 text-sm mt-1">{{ a.description }}</p>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
     {% else %}
-      <p class="text-gray-400">No achievements yet.</p>
+    <p class="text-gray-400">No achievements yet.</p>
     {% endif %}
   </div>
-
 </div>
 {% endblock %}

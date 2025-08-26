@@ -1,35 +1,55 @@
-{% extends 'lecturer/base_lecturer.html' %}
-{% block title %}{{ student.get_full_name }} - Disciplinary Actions{% endblock %}
-
-{% block content_inner %}
-<div class="max-w-2xl mx-auto bg-white/10 backdrop-blur-md rounded-2xl shadow-lg p-8 border border-white/20 mt-12">
+{% extends 'lecturer/base_lecturer.html' %} {% block title %}{{
+student.get_full_name }} - Disciplinary Actions{% endblock %} {% block
+content_inner %}
+<div
+  class="max-w-2xl mx-auto bg-white/10 backdrop-blur-md rounded-2xl shadow-lg p-8 border border-white/20 mt-12"
+>
   <div class="flex items-center mb-6">
-    <a href="{% url 'lecturer:student_full_details' student.user.id %}" class="text-purple-400 hover:text-purple-200 transition font-medium flex items-center gap-1">
-      <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    <a
+      href="{% url 'lecturer:student_full_details' student.user.id %}"
+      class="text-purple-400 hover:text-purple-200 transition font-medium flex items-center gap-1"
+    >
+      <svg
+        class="w-5 h-5 inline mr-1"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M15 19l-7-7 7-7"
+        />
       </svg>
       Back to Student Details
     </a>
   </div>
 
-  <h1 class="text-2xl font-bold text-white mb-6">{{ student.get_full_name }} - Disciplinary Actions</h1>
+  <h1 class="text-2xl font-bold text-white mb-6">
+    {{ student.get_full_name }} - Disciplinary Actions
+  </h1>
 
   {% if disciplinary_actions %}
-    <ul class="space-y-4">
-      {% for action in disciplinary_actions %}
-        <li class="bg-white/10 rounded-lg p-4 border border-white/10 shadow-sm">
-          <div class="flex justify-between items-center mb-1">
-            <span class="font-semibold text-red-400">{{ action.action }}</span>
-            <span class="text-xs text-gray-400">{{ action.date|date:"M d, Y" }}</span>
-          </div>
-          {% if action.description %}
-            <p class="text-gray-200 text-sm mt-2">{{ action.description }}</p>
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
+  <ul class="space-y-4">
+    {% for action in disciplinary_actions %}
+    <li class="bg-white/10 rounded-lg p-4 border border-white/10 shadow-sm">
+      <div class="flex justify-between items-center mb-1">
+        <span class="font-semibold text-red-400">{{ action.action }}</span>
+        <span class="text-xs text-gray-400"
+          >{{ action.date|date:"M d, Y" }}</span
+        >
+      </div>
+      {% if action.description %}
+      <p class="text-gray-200 text-sm mt-2">{{ action.description }}</p>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
   {% else %}
-    <div class="text-center text-gray-300 mt-8 text-lg">No disciplinary actions recorded for this student.</div>
+  <div class="text-center text-gray-300 mt-8 text-lg">
+    No disciplinary actions recorded for this student.
+  </div>
   {% endif %}
 </div>
 {% endblock %}
