@@ -1,0 +1,83 @@
+﻿# ───── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+*.pdb
+*.egg
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+
+# ───── Virtual Environments ──────────────────────────────────
+venv/
+ENV/
+env/
+.venv/
+
+# ───── Django ────────────────────────────────────────────────
+*.log
+*.pot
+*.pyc
+db.sqlite3
+db.sqlite3-journal
+
+# Local settings / secrets
+*.env
+.env.*
+.envrc
+
+# ───── Migrations (optional: keep only initial if needed) ─────
+**/migrations/*.py
+!**/migrations/__init__.py
+
+# ───── Static & Media ────────────────────────────────────────
+/staticfiles/           # Collected static (for prod)
+/media/                 # User uploads
+
+# ───── Node / Frontend (if used for Tailwind build) ──────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+# ───── IDEs & Editors ────────────────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ───── OS Files ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ───── Coverage / Testing ────────────────────────────────────
+.coverage
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.coverage.*
+.cache/
+junit*.xml
+
+# ───── Build / Packaging ─────────────────────────────────────
+build/
+dist/
+pip-wheel-metadata/
+*.egg-info/
+MANIFEST
+
+# ───── Deployment / Render / Docker ──────────────────────────
+*.pid
+*.seed
+*.log
+*.bak
+*.swp
+*.tmp
+*.orig
