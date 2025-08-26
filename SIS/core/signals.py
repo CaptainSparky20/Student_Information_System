@@ -6,6 +6,7 @@ from django.utils import timezone
 from .models import Student, Lecturer
 from accounts.models import CustomUser  # Adjust import if needed
 
+
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     """
@@ -24,6 +25,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         elif instance.role == CustomUser.Role.LECTURER:
             Lecturer.objects.get_or_create(user=instance)
 
+
 @receiver(user_logged_in)
 def update_latest_activity(sender, request, user, **kwargs):
     """
@@ -32,6 +34,6 @@ def update_latest_activity(sender, request, user, **kwargs):
     try:
         student = Student.objects.get(user=user)
         student.latest_activity = timezone.now()
-        student.save(update_fields=['latest_activity'])
+        student.save(update_fields=["latest_activity"])
     except Student.DoesNotExist:
         pass

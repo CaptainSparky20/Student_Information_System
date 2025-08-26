@@ -5,34 +5,92 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='CustomUser',
+            name="CustomUser",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('password', models.CharField(max_length=128, verbose_name='password')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
-                ('email', models.EmailField(max_length=254, unique=True)),
-                ('identity_card_number', models.CharField(max_length=20, unique=True, verbose_name='IC/Identity Card No.')),
-                ('full_name', models.CharField(max_length=255, verbose_name='Full Name (as per IC)')),
-                ('short_name', models.CharField(blank=True, help_text="E.g. 'Ali', for display in tables/lists", max_length=64, verbose_name='Short Name')),
-                ('role', models.CharField(choices=[('STUDENT', 'Student'), ('LECTURER', 'Lecturer'), ('ADMIN', 'Admin')], default='STUDENT', max_length=20)),
-                ('phone_number', models.CharField(blank=True, max_length=20, null=True)),
-                ('address', models.TextField(blank=True, null=True)),
-                ('profile_picture', models.ImageField(blank=True, null=True, upload_to='profile_pics/')),
-                ('is_staff', models.BooleanField(default=False)),
-                ('is_active', models.BooleanField(default=True)),
-                ('date_joined', models.DateTimeField(blank=True, default=django.utils.timezone.now, null=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("password", models.CharField(max_length=128, verbose_name="password")),
+                (
+                    "last_login",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="last login"
+                    ),
+                ),
+                (
+                    "is_superuser",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Designates that this user has all permissions without explicitly assigning them.",
+                        verbose_name="superuser status",
+                    ),
+                ),
+                ("email", models.EmailField(max_length=254, unique=True)),
+                (
+                    "identity_card_number",
+                    models.CharField(
+                        max_length=20, unique=True, verbose_name="IC/Identity Card No."
+                    ),
+                ),
+                (
+                    "full_name",
+                    models.CharField(
+                        max_length=255, verbose_name="Full Name (as per IC)"
+                    ),
+                ),
+                (
+                    "short_name",
+                    models.CharField(
+                        blank=True,
+                        help_text="E.g. 'Ali', for display in tables/lists",
+                        max_length=64,
+                        verbose_name="Short Name",
+                    ),
+                ),
+                (
+                    "role",
+                    models.CharField(
+                        choices=[
+                            ("STUDENT", "Student"),
+                            ("LECTURER", "Lecturer"),
+                            ("ADMIN", "Admin"),
+                        ],
+                        default="STUDENT",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "phone_number",
+                    models.CharField(blank=True, max_length=20, null=True),
+                ),
+                ("address", models.TextField(blank=True, null=True)),
+                (
+                    "profile_picture",
+                    models.ImageField(blank=True, null=True, upload_to="profile_pics/"),
+                ),
+                ("is_staff", models.BooleanField(default=False)),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "date_joined",
+                    models.DateTimeField(
+                        blank=True, default=django.utils.timezone.now, null=True
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

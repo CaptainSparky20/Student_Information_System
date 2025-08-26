@@ -4,24 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='parent',
-            name='user',
+            model_name="parent",
+            name="user",
         ),
         migrations.AddField(
-            model_name='parent',
-            name='email',
+            model_name="parent",
+            name="email",
             field=models.EmailField(blank=True, max_length=254, null=True),
         ),
         migrations.AddField(
-            model_name='parent',
-            name='full_name',
+            model_name="parent",
+            name="full_name",
             field=models.CharField(default=1, max_length=255),
             preserve_default=False,
         ),

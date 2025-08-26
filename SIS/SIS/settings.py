@@ -1,6 +1,7 @@
 """
 Django settings for SIS project (prod-ready with local defaults).
 """
+
 from pathlib import Path
 import os
 import dj_database_url
@@ -9,7 +10,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ── Core toggles (env-first, sane local defaults) ──────────────────────────────
-DEBUG = os.environ.get("DEBUG", "True").lower() == "true"          # Local: True
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"  # Local: True
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-insecure-change-me")  # Set in prod!
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost 127.0.0.1 [::1]").split()
 
@@ -19,7 +20,8 @@ if _raw_csrf:
     CSRF_TRUSTED_ORIGINS = _raw_csrf.split()
 else:
     CSRF_TRUSTED_ORIGINS = [
-        f"https://{h}" for h in ALLOWED_HOSTS
+        f"https://{h}"
+        for h in ALLOWED_HOSTS
         if h not in ("localhost", "127.0.0.1", "[::1]") and not DEBUG
     ]
 
@@ -29,15 +31,25 @@ USE_X_FORWARDED_HOST = True
 
 # ── Apps ───────────────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
-    "django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes",
-    "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles",
-    "dashboard", "student", "lecturer", "adminportal", "accounts",
-    "core.apps.CoreConfig", "widget_tweaks", "notifications",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "dashboard",
+    "student",
+    "lecturer",
+    "adminportal",
+    "accounts",
+    "core.apps.CoreConfig",
+    "widget_tweaks",
+    "notifications",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",   # keep right after SecurityMiddleware
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # keep right after SecurityMiddleware
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -48,18 +60,20 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "SIS.urls"
 
-TEMPLATES = [{
-    "BACKEND": "django.template.backends.django.DjangoTemplates",
-    "DIRS": [BASE_DIR / "templates"],
-    "APP_DIRS": True,
-    "OPTIONS": {
-        "context_processors": [
-            "django.template.context_processors.request",
-            "django.contrib.auth.context_processors.auth",
-            "django.contrib.messages.context_processors.messages",
-        ],
-    },
-}]
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    }
+]
 
 WSGI_APPLICATION = "SIS.wsgi.application"
 
@@ -69,7 +83,10 @@ DATABASES = {
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
         ssl_require=(
-            not DEBUG and os.environ.get("DATABASE_URL", "").startswith(("postgres://", "postgresql://"))
+            not DEBUG
+            and os.environ.get("DATABASE_URL", "").startswith(
+                ("postgres://", "postgresql://")
+            )
         ),
     )
 }
@@ -79,7 +96,9 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 LOGOUT_REDIRECT_URL = "/"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -93,13 +112,13 @@ USE_TZ = True
 
 # ── Static files (WhiteNoise) ──────────────────────────────────────────────────
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]              # your app's static/
-STATIC_ROOT = BASE_DIR / "staticfiles"                # collected static (prod)
+STATICFILES_DIRS = [BASE_DIR / "static"]  # your app's static/
+STATIC_ROOT = BASE_DIR / "staticfiles"  # collected static (prod)
 
 # ── Media (user uploads) ───────────────────────────────────────────────────────
 MEDIA_URL = "/media/"
 if os.environ.get("RENDER"):
-    MEDIA_ROOT = "/var/media"                         # attach Render disk here
+    MEDIA_ROOT = "/var/media"  # attach Render disk here
 else:
     MEDIA_ROOT = BASE_DIR / "media"
 
@@ -114,7 +133,8 @@ STORAGES = {
     # Static storage: WhiteNoise
     "staticfiles": {
         "BACKEND": (
-            "whitenoise.storage.CompressedStaticFilesStorage" if DEBUG
+            "whitenoise.storage.CompressedStaticFilesStorage"
+            if DEBUG
             else "whitenoise.storage.CompressedManifestStaticFilesStorage"
         )
     },
@@ -126,7 +146,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 24h
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-reply@example.com")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
+)
 EMAIL_HOST = os.environ.get("EMAIL_HOST")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")

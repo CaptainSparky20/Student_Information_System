@@ -11,48 +11,63 @@ from django.utils.dateparse import parse_date
 from django.db.models import Q, Prefetch
 
 from core.models import (
-    Lecturer, Course, Enrollment, Attendance,
-    Student, StudentAchievement, DisciplinaryAction
+    Lecturer,
+    Course,
+    Enrollment,
+    Attendance,
+    Student,
+    StudentAchievement,
+    DisciplinaryAction,
 )
 from accounts.models import CustomUser
 from accounts.decorators import role_required
 from accounts.forms import LecturerProfileUpdateForm
 from notifications.models import Notification
-from .forms import AttendanceForm, MessageForm, AttendanceHistoryFilterForm, DisciplinaryActionForm
+from .forms import (
+    AttendanceForm,
+    MessageForm,
+    AttendanceHistoryFilterForm,
+    DisciplinaryActionForm,
+)
 from core.models import ClassGroup
 from .forms import StudentAchievementForm
 from core.forms import ParentForm
-from django.http import HttpResponseForbidden 
+from django.http import HttpResponseForbidden
 from core.models import Parent
 
 
-#==============================================================
+# ==============================================================
 # CLASS GROUP STUDENT LIST
 # ==============================================================
 @role_required(CustomUser.Role.LECTURER)
 def classgroup_student_list(request, classgroup_id):
     classgroup = get_object_or_404(ClassGroup, pk=classgroup_id)
-    enrollments = (
-        Enrollment.objects.filter(class_group=classgroup)
-        .select_related('student__user')
+    enrollments = Enrollment.objects.filter(class_group=classgroup).select_related(
+        "student__user"
     )
 
     q = request.GET.get("q")
     if q:
         enrollments = enrollments.filter(
-            Q(student__user__full_name__icontains=q) |
-            Q(student__user__email__icontains=q)
+            Q(student__user__full_name__icontains=q)
+            | Q(student__user__email__icontains=q)
         )
     students = [enrollment.student for enrollment in enrollments]
 
-    return render(request, 'lecturer/student_list.html', {  
-        'classgroup': classgroup,
-        'students': students,
-    })
+    return render(
+        request,
+        "lecturer/student_list.html",
+        {
+            "classgroup": classgroup,
+            "students": students,
+        },
+    )
+
 
 # ==============================================================
 # ATTENDANCE VIEWS (ALL COURSES & BULK)
 # ==============================================================
+
 
 @role_required(CustomUser.Role.LECTURER)
 def take_attendance(request):
@@ -69,9 +84,7 @@ def take_attendance(request):
     course = classgroup.course  # Use the related course object for display
     today = date.today()
     selected_date = (
-        request.POST.get("date")
-        or request.GET.get("date")
-        or today.isoformat()
+        request.POST.get("date") or request.GET.get("date") or today.isoformat()
     )
     try:
         selected_date_obj = datetime.strptime(selected_date, "%Y-%m-%d").date()
@@ -80,16 +93,14 @@ def take_attendance(request):
 
     session_list = ["morning", "evening"]
     selected_session = (
-        request.POST.get("session")
-        or request.GET.get("session")
-        or session_list[0]
+        request.POST.get("session") or request.GET.get("session") or session_list[0]
     )
 
-    enrollments = Enrollment.objects.filter(class_group=classgroup).select_related("student__user")
+    enrollments = Enrollment.objects.filter(class_group=classgroup).select_related(
+        "student__user"
+    )
     attendance_qs = Attendance.objects.filter(
-        enrollment__in=enrollments,
-        date=selected_date_obj,
-        session=selected_session
+        enrollment__in=enrollments, date=selected_date_obj, session=selected_session
     )
     att_map = {att.enrollment_id: att for att in attendance_qs}
     for enroll in enrollments:
@@ -112,12 +123,17 @@ def take_attendance(request):
                     defaults={"status": status, "description": remarks},
                 )
                 updated += 1
-        messages.success(request, f"Attendance saved for {updated} students ({selected_session.capitalize()} session).")
-        return redirect(f"{request.path}?date={selected_date_obj}&session={selected_session}")
+        messages.success(
+            request,
+            f"Attendance saved for {updated} students ({selected_session.capitalize()} session).",
+        )
+        return redirect(
+            f"{request.path}?date={selected_date_obj}&session={selected_session}"
+        )
 
     context = {
-        "course": course,                 # Used for classroom display in the template
-        "classgroup": classgroup,         # If you want to display class group details
+        "course": course,  # Used for classroom display in the template
+        "classgroup": classgroup,  # If you want to display class group details
         "enrollments": enrollments,
         "today": today.isoformat(),
         "selected_date": selected_date_obj.isoformat(),
@@ -133,21 +149,23 @@ def mark_attendance(request):
     """
     Mark attendance (single submission, old API for compatibility).
     """
-    if request.method == 'POST':
+    if request.method == "POST":
         attendance_form = AttendanceForm(request.POST)
         if attendance_form.is_valid():
-            enrollment = attendance_form.cleaned_data['enrollment']
-            date_value = attendance_form.cleaned_data['date']
-            status = attendance_form.cleaned_data['status']
+            enrollment = attendance_form.cleaned_data["enrollment"]
+            date_value = attendance_form.cleaned_data["date"]
+            status = attendance_form.cleaned_data["status"]
             Attendance.objects.update_or_create(
-                enrollment=enrollment,
-                date=date_value,
-                defaults={'status': status}
+                enrollment=enrollment, date=date_value, defaults={"status": status}
             )
-            messages.success(request, f"Attendance updated for {enrollment.student.user.get_full_name()} on {date_value}.")
+            messages.success(
+                request,
+                f"Attendance updated for {enrollment.student.user.get_full_name()} on {date_value}.",
+            )
         else:
             messages.error(request, "Please correct the errors in the attendance form.")
-    return redirect('lecturer:dashboard')
+    return redirect("lecturer:dashboard")
+
 
 @role_required(CustomUser.Role.LECTURER)
 def mark_individual_attendance(request, enrollment_id):
@@ -156,56 +174,69 @@ def mark_individual_attendance(request, enrollment_id):
     """
     enrollment = get_object_or_404(Enrollment, id=enrollment_id)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = AttendanceForm(request.POST)
         if form.is_valid():
-            date_value = form.cleaned_data['date']
-            status = form.cleaned_data['status']
+            date_value = form.cleaned_data["date"]
+            status = form.cleaned_data["status"]
             Attendance.objects.update_or_create(
-                enrollment=enrollment,
-                date=date_value,
-                defaults={'status': status}
+                enrollment=enrollment, date=date_value, defaults={"status": status}
             )
-            messages.success(request, f"Attendance recorded for {enrollment.student.user.get_full_name()} on {date_value}.")
-            return redirect('lecturer:attendance_list')
+            messages.success(
+                request,
+                f"Attendance recorded for {enrollment.student.user.get_full_name()} on {date_value}.",
+            )
+            return redirect("lecturer:attendance_list")
     else:
-        form = AttendanceForm(initial={'enrollment': enrollment})
+        form = AttendanceForm(initial={"enrollment": enrollment})
 
-    return render(request, 'lecturer/mark_attendance.html', {
-        'form': form,
-        'enrollment': enrollment
-    })
+    return render(
+        request,
+        "lecturer/mark_attendance.html",
+        {"form": form, "enrollment": enrollment},
+    )
+
 
 # ==============================================================
 # ATTENDANCE HISTORY (PAST ATTENDANCE VIEWS)
 # ==============================================================
+
 
 @role_required(CustomUser.Role.LECTURER)
 def class_attendance(request, classgroup_id):
     classgroup = get_object_or_404(ClassGroup, id=classgroup_id)
     enrollments = (
         Enrollment.objects.filter(class_group=classgroup)
-        .select_related('student__user')
-        .prefetch_related('attendance_set')
+        .select_related("student__user")
+        .prefetch_related("attendance_set")
     )
 
     # Build a list of enrollments with attendance percentage
     enrollments_with_percent = []
     for enrollment in enrollments:
         total_attendance = enrollment.attendance_set.count()
-        present_count = enrollment.attendance_set.filter(status='present').count()
+        present_count = enrollment.attendance_set.filter(status="present").count()
         attendance_percentage = (
-            round((present_count / total_attendance) * 100, 2) if total_attendance else None
+            round((present_count / total_attendance) * 100, 2)
+            if total_attendance
+            else None
         )
-        enrollments_with_percent.append({
-            'enrollment': enrollment,
-            'attendance_percentage': attendance_percentage,
-        })
+        enrollments_with_percent.append(
+            {
+                "enrollment": enrollment,
+                "attendance_percentage": attendance_percentage,
+            }
+        )
 
-    return render(request, 'lecturer/class_attendance.html', {
-        'classgroup': classgroup,
-        'enrollments': enrollments_with_percent,
-    })
+    return render(
+        request,
+        "lecturer/class_attendance.html",
+        {
+            "classgroup": classgroup,
+            "enrollments": enrollments_with_percent,
+        },
+    )
+
 
 @role_required(CustomUser.Role.LECTURER)
 def attendance_history(request):
@@ -213,8 +244,7 @@ def attendance_history(request):
 
     # All classgroups assigned to this lecturer
     classgroups = (
-        ClassGroup.objects
-        .filter(lecturers=lecturer)
+        ClassGroup.objects.filter(lecturers=lecturer)
         .select_related("course")
         .order_by("course__name", "name")
         .distinct()
@@ -234,13 +264,16 @@ def attendance_history(request):
         classgroup_id = str(classgroups.first().id)
 
     # resolve selected_classgroup ONLY from lecturer's list
-    selected_classgroup = classgroups.filter(id=classgroup_id).first() if classgroup_id else None
+    selected_classgroup = (
+        classgroups.filter(id=classgroup_id).first() if classgroup_id else None
+    )
 
     attendance_list, days_range = None, []
 
     # (optional) form wiring, if you have one
     try:
         from lecturer.forms import AttendanceHistoryFilterForm
+
         form = AttendanceHistoryFilterForm(
             initial={"class_group": classgroup_id or "", "date": selected_date},
             classgroups=classgroups,  # <— pass lecturer’s classgroups here
@@ -250,8 +283,8 @@ def attendance_history(request):
 
     if selected_classgroup:
         # enrollments for this classgroup only
-        enrollments = (Enrollment.objects
-            .filter(class_group=selected_classgroup)
+        enrollments = (
+            Enrollment.objects.filter(class_group=selected_classgroup)
             .select_related("student__user", "class_group")
             .order_by("student__user__full_name", "student__user__id")
         )
@@ -264,13 +297,19 @@ def attendance_history(request):
             days_range = [start + timedelta(days=i) for i in range(7)]
         else:  # month
             m1 = selected_date.replace(day=1)
-            m2 = (m1.replace(year=m1.year + 1, month=1) if m1.month == 12
-                  else m1.replace(month=m1.month + 1))
+            m2 = (
+                m1.replace(year=m1.year + 1, month=1)
+                if m1.month == 12
+                else m1.replace(month=m1.month + 1)
+            )
             days_range = [m1 + timedelta(days=i) for i in range((m2 - m1).days)]
 
         if days_range:
-            records = (Attendance.objects
-                .filter(enrollment__in=enrollments, date__range=[days_range[0], days_range[-1]])
+            records = (
+                Attendance.objects.filter(
+                    enrollment__in=enrollments,
+                    date__range=[days_range[0], days_range[-1]],
+                )
                 .select_related("enrollment__student__user")
                 .only("enrollment_id", "date", "session", "status")
             )
@@ -283,27 +322,34 @@ def attendance_history(request):
                     m = att.get((e.id, d, "morning"), "not marked")
                     v = att.get((e.id, d, "evening"), "not marked")
                     for s in (m, v):
-                        if s in ("present", "absent", "late", "excused"): total += 1
-                        if s == "present": present += 1
-                        elif s == "absent": absent += 1
-                        elif s == "late": late += 1
-                        elif s == "excused": excused += 1
+                        if s in ("present", "absent", "late", "excused"):
+                            total += 1
+                        if s == "present":
+                            present += 1
+                        elif s == "absent":
+                            absent += 1
+                        elif s == "late":
+                            late += 1
+                        elif s == "excused":
+                            excused += 1
                     row.append({"date": d, "morning": m, "evening": v})
                 pct = round((present / total) * 100, 2) if total else None
-                attendance_list.append({
-                    "student": e.student,
-                    "statuses": row,
-                    "present_count": present,
-                    "absent_count": absent,
-                    "late_count": late,
-                    "excused_count": excused,
-                    "total_marked": total,
-                    "attendance_percentage": pct,
-                })
+                attendance_list.append(
+                    {
+                        "student": e.student,
+                        "statuses": row,
+                        "present_count": present,
+                        "absent_count": absent,
+                        "late_count": late,
+                        "excused_count": excused,
+                        "total_marked": total,
+                        "attendance_percentage": pct,
+                    }
+                )
 
     context = {
         "form": form,
-        "classgroups": classgroups,              # ✅ template fallback
+        "classgroups": classgroups,  # ✅ template fallback
         "selected_classgroup": selected_classgroup,
         "attendance_list": attendance_list,
         "selected_date": selected_date,
@@ -314,11 +360,10 @@ def attendance_history(request):
     return render(request, "lecturer/attendance_history.html", context)
 
 
-
-
 # ==============================================================
 # COURSE-SPECIFIC ATTENDANCE AND HISTORY
 # ==============================================================
+
 
 @role_required(CustomUser.Role.LECTURER)
 def course_attendance(request, course_id):
@@ -326,31 +371,38 @@ def course_attendance(request, course_id):
     Bulk attendance page for a specific course.
     """
     course = get_object_or_404(Course, id=course_id, lecturers__user=request.user)
-    enrollments = Enrollment.objects.filter(course=course).select_related('student__user')
+    enrollments = Enrollment.objects.filter(course=course).select_related(
+        "student__user"
+    )
     today = date.today()
 
     if request.method == "POST":
         updated = 0
         for enrollment in enrollments:
-            status = request.POST.get(f'status_{enrollment.id}')
-            if status in ['present', 'absent']:
+            status = request.POST.get(f"status_{enrollment.id}")
+            if status in ["present", "absent"]:
                 Attendance.objects.update_or_create(
-                    enrollment=enrollment,
-                    date=today,
-                    defaults={'status': status}
+                    enrollment=enrollment, date=today, defaults={"status": status}
                 )
                 updated += 1
         if updated:
-            messages.success(request, f"Attendance recorded for {updated} students in {course.name}.")
+            messages.success(
+                request, f"Attendance recorded for {updated} students in {course.name}."
+            )
         else:
             messages.warning(request, "No attendance was marked.")
-        return redirect('lecturer:course_attendance', course_id=course.id)
+        return redirect("lecturer:course_attendance", course_id=course.id)
 
-    return render(request, 'lecturer/course_attendance.html', {
-        'course': course,
-        'enrollments': enrollments,
-        'today': today,
-    })
+    return render(
+        request,
+        "lecturer/course_attendance.html",
+        {
+            "course": course,
+            "enrollments": enrollments,
+            "today": today,
+        },
+    )
+
 
 @role_required(CustomUser.Role.LECTURER)
 def course_attendance_history(request, course_id):
@@ -360,16 +412,25 @@ def course_attendance_history(request, course_id):
     course = get_object_or_404(Course, id=course_id, lecturers__user=request.user)
     enrollments = Enrollment.objects.filter(course=course)
     attendance_by_date = {}
-    for att in Attendance.objects.filter(enrollment__in=enrollments).select_related('enrollment__student__user').order_by('-date'):
+    for att in (
+        Attendance.objects.filter(enrollment__in=enrollments)
+        .select_related("enrollment__student__user")
+        .order_by("-date")
+    ):
         day = att.date
         if day not in attendance_by_date:
             attendance_by_date[day] = []
         attendance_by_date[day].append(att)
 
-    return render(request, 'lecturer/course_attendance_history.html', {
-        'course': course,
-        'attendance_by_date': attendance_by_date,
-    })
+    return render(
+        request,
+        "lecturer/course_attendance_history.html",
+        {
+            "course": course,
+            "attendance_by_date": attendance_by_date,
+        },
+    )
+
 
 # ==============================================================
 # STUDENT & ACHIEVEMENT / DISCIPLINARY RECORD VIEWS
@@ -380,7 +441,7 @@ def student_achievements(request, student_id):
     List and add achievements for a student.
     """
     student = get_object_or_404(Student, id=student_id)
-    achievements = student.achievements.order_by('-date_awarded')
+    achievements = student.achievements.order_by("-date_awarded")
 
     if request.method == "POST":
         form = StudentAchievementForm(request.POST)
@@ -389,15 +450,20 @@ def student_achievements(request, student_id):
             achievement.student = student
             achievement.save()
             messages.success(request, "Achievement added successfully.")
-            return redirect('lecturer:student_achievements', student_id=student.id)
+            return redirect("lecturer:student_achievements", student_id=student.id)
     else:
         form = StudentAchievementForm()
 
-    return render(request, 'lecturer/add_student_achievements.html', {
-        'student': student,
-        'achievements': achievements,
-        'form': form,
-    })
+    return render(
+        request,
+        "lecturer/add_student_achievements.html",
+        {
+            "student": student,
+            "achievements": achievements,
+            "form": form,
+        },
+    )
+
 
 @role_required(CustomUser.Role.LECTURER)
 def student_disciplinary_actions(request, student_id):
@@ -405,11 +471,17 @@ def student_disciplinary_actions(request, student_id):
     List disciplinary actions for a student.
     """
     student = get_object_or_404(Student, id=student_id)
-    disciplinary_actions = DisciplinaryAction.objects.filter(student=student).order_by('-date')
-    return render(request, 'lecturer/student_disciplinary_actions.html', {
-        'student': student,
-        'disciplinary_actions': disciplinary_actions,
-    })
+    disciplinary_actions = DisciplinaryAction.objects.filter(student=student).order_by(
+        "-date"
+    )
+    return render(
+        request,
+        "lecturer/student_disciplinary_actions.html",
+        {
+            "student": student,
+            "disciplinary_actions": disciplinary_actions,
+        },
+    )
 
 
 # ==============================================================
@@ -427,14 +499,20 @@ def take_disciplinary_action(request, student_id):
             action.reported_by = request.user  # if you track reporter
             action.save()
             messages.success(request, "Disciplinary action recorded successfully.")
-            return redirect('lecturer:student_disciplinary_actions', student_id=student.id)
+            return redirect(
+                "lecturer:student_disciplinary_actions", student_id=student.id
+            )
     else:
         form = DisciplinaryActionForm()
 
-    return render(request, "lecturer/take_disciplinary_action.html", {
-        "student": student,
-        "form": form,
-    })
+    return render(
+        request,
+        "lecturer/take_disciplinary_action.html",
+        {
+            "student": student,
+            "form": form,
+        },
+    )
 
 
 @role_required(CustomUser.Role.LECTURER)
@@ -443,29 +521,43 @@ def student_full_details(request, student_id):
     Show full student details for lecturers.
     Accepts a Student.pk (from the list page).
     """
-    enrollments_qs = (
-        Enrollment.objects
-        .select_related("class_group__course")
-        .prefetch_related("class_group__lecturers__user")
-    )
+    enrollments_qs = Enrollment.objects.select_related(
+        "class_group__course"
+    ).prefetch_related("class_group__lecturers__user")
 
     student = get_object_or_404(
-        Student.objects
-        .select_related("user", "class_group__course", "class_group__department")
+        Student.objects.select_related(
+            "user", "class_group__course", "class_group__department"
+        )
         .prefetch_related(
             "parents",
-            Prefetch("achievements", queryset=StudentAchievement.objects.order_by("-date_awarded")),
-            Prefetch("disciplinary_actions", queryset=DisciplinaryAction.objects.order_by("-date")),
-            Prefetch("enrollment_set", queryset=enrollments_qs, to_attr="prefetched_enrollments"),
+            Prefetch(
+                "achievements",
+                queryset=StudentAchievement.objects.order_by("-date_awarded"),
+            ),
+            Prefetch(
+                "disciplinary_actions",
+                queryset=DisciplinaryAction.objects.order_by("-date"),
+            ),
+            Prefetch(
+                "enrollment_set",
+                queryset=enrollments_qs,
+                to_attr="prefetched_enrollments",
+            ),
         )
         .filter(user__role=CustomUser.Role.STUDENT),
-        pk=student_id
+        pk=student_id,
     )
 
-    return render(request, "lecturer/student_full_details.html", {
-        "student_profile": student,
-        "enrollments": getattr(student, "prefetched_enrollments", []),
-    })
+    return render(
+        request,
+        "lecturer/student_full_details.html",
+        {
+            "student_profile": student,
+            "enrollments": getattr(student, "prefetched_enrollments", []),
+        },
+    )
+
 
 @role_required(CustomUser.Role.LECTURER)
 def update_student_activity(request, student_id):
@@ -474,19 +566,24 @@ def update_student_activity(request, student_id):
     """
     student = get_object_or_404(Student, id=student_id)
     student.latest_activity = timezone.now()
-    student.save(update_fields=['latest_activity'])
-    messages.success(request, f"Updated latest activity for {student.user.get_full_name()}.")
-    return redirect('lecturer:student_full_details', student_id=student.id)
+    student.save(update_fields=["latest_activity"])
+    messages.success(
+        request, f"Updated latest activity for {student.user.get_full_name()}."
+    )
+    return redirect("lecturer:student_full_details", student_id=student.id)
+
 
 # ==============================================================
-# ADD EMERGENCY CONTACT DETAILS 
+# ADD EMERGENCY CONTACT DETAILS
 # ==============================================================
 @role_required(CustomUser.Role.LECTURER)
 def add_parent_details(request, student_id):
     lecturer = get_object_or_404(Lecturer, user=request.user)
     student = get_object_or_404(Student, pk=student_id)
 
-    if not ClassGroup.objects.filter(pk=student.class_group_id, lecturers=lecturer).exists():
+    if not ClassGroup.objects.filter(
+        pk=student.class_group_id, lecturers=lecturer
+    ).exists():
         return HttpResponseForbidden("You are not authorized to manage this student.")
 
     if request.method == "POST":
@@ -502,7 +599,9 @@ def add_parent_details(request, student_id):
 
             if not student.parents.filter(pk=parent.pk).exists():
                 student.parents.add(parent)
-                messages.success(request, "Parent/guardian saved and linked to the student.")
+                messages.success(
+                    request, "Parent/guardian saved and linked to the student."
+                )
             else:
                 messages.info(request, "This parent/guardian is already linked.")
             return redirect("lecturer:manage_parents", student_id=student.id)
@@ -510,8 +609,9 @@ def add_parent_details(request, student_id):
     else:
         form = ParentForm()
 
-    return render(request, "lecturer/add_parent_details.html", {"student": student, "form": form})
-
+    return render(
+        request, "lecturer/add_parent_details.html", {"student": student, "form": form}
+    )
 
 
 @role_required(CustomUser.Role.LECTURER)
@@ -519,14 +619,21 @@ def manage_parents(request, student_id):
     lecturer = get_object_or_404(Lecturer, user=request.user)
     student = get_object_or_404(Student, pk=student_id)
 
-    if not ClassGroup.objects.filter(pk=student.class_group_id, lecturers=lecturer).exists():
+    if not ClassGroup.objects.filter(
+        pk=student.class_group_id, lecturers=lecturer
+    ).exists():
         return HttpResponseForbidden("You are not authorized to view this page.")
 
     parents = student.parents.all()
-    return render(request, "lecturer/manage_parents.html", {
-        "student": student,
-        "parents": parents,
-    })
+    return render(
+        request,
+        "lecturer/manage_parents.html",
+        {
+            "student": student,
+            "parents": parents,
+        },
+    )
+
 
 @role_required(CustomUser.Role.LECTURER)
 def remove_parent(request, student_id, parent_id):
@@ -537,7 +644,9 @@ def remove_parent(request, student_id, parent_id):
     student = get_object_or_404(Student, pk=student_id)
     parent = get_object_or_404(Parent, pk=parent_id)
 
-    if not ClassGroup.objects.filter(pk=student.class_group_id, lecturers=lecturer).exists():
+    if not ClassGroup.objects.filter(
+        pk=student.class_group_id, lecturers=lecturer
+    ).exists():
         return HttpResponseForbidden("You are not authorized to perform this action.")
 
     if request.method == "POST":
@@ -548,40 +657,46 @@ def remove_parent(request, student_id, parent_id):
     # Gentle fallback (optional confirm page). You can skip and always POST from a button.
     messages.error(request, "Invalid request method.")
     return redirect("lecturer:manage_parents", student_id=student.id)
+
+
 # ==============================================================
 # MESSAGING, EXPORTS, UTILITIES
 # ==============================================================
+
 
 @role_required(CustomUser.Role.LECTURER)
 def send_message(request):
     """
     Send notification to a student.
     """
-    if request.method == 'POST':
+    if request.method == "POST":
         message_form = MessageForm(request.POST)
         if message_form.is_valid():
-            student_email = message_form.cleaned_data['student_email']
-            message_text = message_form.cleaned_data['message']
+            student_email = message_form.cleaned_data["student_email"]
+            message_text = message_form.cleaned_data["message"]
             try:
-                student_user = CustomUser.objects.get(email=student_email, role=CustomUser.Role.STUDENT)
+                student_user = CustomUser.objects.get(
+                    email=student_email, role=CustomUser.Role.STUDENT
+                )
             except CustomUser.DoesNotExist:
                 messages.error(request, "Student not found.")
             else:
                 Notification.objects.create(
                     lecturer=request.user,
-                    message=f"Message sent to {student_user.get_full_name()}: {message_text}"
+                    message=f"Message sent to {student_user.get_full_name()}: {message_text}",
                 )
                 messages.success(request, "Message sent successfully.")
         else:
             messages.error(request, "Please correct the errors in the message form.")
-    return redirect('lecturer:dashboard')
+    return redirect("lecturer:dashboard")
+
 
 def export_attendance(request):
     """
     Export attendance records to CSV for a specific course and date.
     """
-    course_id = request.GET.get('course')
-    date_str = request.GET.get('date')
+    course_id = request.GET.get("course")
+    date_str = request.GET.get("date")
 
     try:
         lecturer = Lecturer.objects.get(user=request.user)
@@ -597,35 +712,34 @@ def export_attendance(request):
     except (ValueError, TypeError):
         return HttpResponse("Invalid date format. Use dd-mm-yyyy.", status=400)
 
-    enrollments = Enrollment.objects.filter(course=course).select_related('student__user')
+    enrollments = Enrollment.objects.filter(course=course).select_related(
+        "student__user"
+    )
     attendance_records = Attendance.objects.filter(
         enrollment__in=enrollments, date=date_obj
-    ).select_related('enrollment__student__user')
+    ).select_related("enrollment__student__user")
 
-    response = HttpResponse(content_type='text/csv')
+    response = HttpResponse(content_type="text/csv")
     filename = f"attendance_{course.code}_{date_obj.strftime('%d/%m/%y')}.csv"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
 
     writer = csv.writer(response)
-    writer.writerow(['Student Name', 'Email', 'Status'])
+    writer.writerow(["Student Name", "Email", "Status"])
 
     attendance_map = {a.enrollment_id: a for a in attendance_records}
 
     for enrollment in enrollments:
         student = enrollment.student.user
         att = attendance_map.get(enrollment.id)
-        status = att.status if att else 'not marked'
-        writer.writerow([
-            student.get_full_name(),
-            student.email,
-            status.capitalize()
-        ])
+        status = att.status if att else "not marked"
+        writer.writerow([student.get_full_name(), student.email, status.capitalize()])
     return response
 
 
 # ==============================================================
 # EXPORT CLASS ATTENDANCE (CSV)
 # ==============================================================
+
 
 def _parse_any_date(s: str | None) -> date:
     if not s:
@@ -665,7 +779,11 @@ def export_attendance(request):
         days_range = [start + timedelta(days=i) for i in range(7)]
     elif period == "month":
         m1 = ref_date.replace(day=1)
-        m2 = m1.replace(year=m1.year + 1, month=1) if m1.month == 12 else m1.replace(month=m1.month + 1)
+        m2 = (
+            m1.replace(year=m1.year + 1, month=1)
+            if m1.month == 12
+            else m1.replace(month=m1.month + 1)
+        )
         days_range = [m1 + timedelta(days=i) for i in range((m2 - m1).days)]
     else:
         enrollments_qs = Enrollment.objects.filter(class_group=classgroup)
@@ -679,8 +797,7 @@ def export_attendance(request):
             days_range = [first.date + timedelta(days=i) for i in range(span)]
 
     enrollments = (
-        Enrollment.objects
-        .filter(class_group=classgroup)
+        Enrollment.objects.filter(class_group=classgroup)
         .select_related("student__user", "class_group")
         .order_by("student__user__full_name", "student__user__id")
     )
@@ -688,8 +805,9 @@ def export_attendance(request):
     sessions = ("morning", "evening")
 
     att_records = (
-        Attendance.objects
-        .filter(enrollment__in=enrollments, date__range=[days_range[0], days_range[-1]])
+        Attendance.objects.filter(
+            enrollment__in=enrollments, date__range=[days_range[0], days_range[-1]]
+        )
         .select_related("enrollment__student__user")
         .only("enrollment_id", "date", "session", "status", "description")
     )
@@ -701,7 +819,9 @@ def export_attendance(request):
     if period == "day":
         suffix = ref_date.strftime("%Y-%m-%d")
     elif period == "week":
-        week_start = (ref_date - timedelta(days=ref_date.weekday())).strftime("%Y-%m-%d")
+        week_start = (ref_date - timedelta(days=ref_date.weekday())).strftime(
+            "%Y-%m-%d"
+        )
         week_end = (parse_date(week_start) + timedelta(days=6)).strftime("%Y-%m-%d")
         suffix = f"week_{week_start}_to_{week_end}"
     elif period == "month":
@@ -716,15 +836,17 @@ def export_attendance(request):
     writer = csv.writer(response)
 
     # Header
-    writer.writerow([
-        "Student Name",
-        "Email",
-        "Class Group",
-        "Date",      # dd/mm/yy in rows
-        "Session",
-        "Status",
-        "Notes",
-    ])
+    writer.writerow(
+        [
+            "Student Name",
+            "Email",
+            "Class Group",
+            "Date",  # dd/mm/yy in rows
+            "Session",
+            "Status",
+            "Notes",
+        ]
+    )
 
     # Rows
     for e in enrollments:
@@ -734,18 +856,19 @@ def export_attendance(request):
                 rec = att_map.get((e.id, d, s))
                 status = rec.status if rec else "not marked"
                 notes = rec.description if rec and rec.description else ""
-                writer.writerow([
-                    student_user.get_full_name(),
-                    student_user.email,
-                    classgroup.name,
-                    d.strftime("%d/%m/%y"),  # <-- updated format
-                    s.title(),
-                    status.title() if status != "not marked" else "n/a",
-                    notes,
-                ])
+                writer.writerow(
+                    [
+                        student_user.get_full_name(),
+                        student_user.email,
+                        classgroup.name,
+                        d.strftime("%d/%m/%y"),  # <-- updated format
+                        s.title(),
+                        status.title() if status != "not marked" else "n/a",
+                        notes,
+                    ]
+                )
 
     return response
-
 
 
 @role_required(CustomUser.Role.LECTURER)
@@ -757,8 +880,7 @@ def export_class_students(request, classgroup_id):
     """
     lecturer = get_object_or_404(Lecturer, user=request.user)
     classgroup = (
-        ClassGroup.objects
-        .filter(id=classgroup_id, lecturers=lecturer)
+        ClassGroup.objects.filter(id=classgroup_id, lecturers=lecturer)
         .select_related("course", "department")
         .first()
     )
@@ -767,8 +889,7 @@ def export_class_students(request, classgroup_id):
 
     # Pull enrollments for THIS class group only, with all useful relations
     enrollments = (
-        Enrollment.objects
-        .filter(class_group=classgroup)
+        Enrollment.objects.filter(class_group=classgroup)
         .select_related(
             "student__user",
             "class_group__course",
@@ -780,7 +901,9 @@ def export_class_students(request, classgroup_id):
 
     # CSV response setup
     base = re.sub(r"[^A-Za-z0-9._-]+", "_", classgroup.name).strip("_") or "class"
-    today_str = timezone.localdate().strftime("%Y-%m-%d")  # keep filename ISO for sorting
+    today_str = timezone.localdate().strftime(
+        "%Y-%m-%d"
+    )  # keep filename ISO for sorting
     filename = f"students_{base}_{today_str}.csv"
 
     response = HttpResponse(content_type="text/csv")
@@ -788,25 +911,27 @@ def export_class_students(request, classgroup_id):
     writer = csv.writer(response)
 
     # Header
-    writer.writerow([
-        "Full Name",
-        "Email",
-        "IC Number",
-        "Phone",
-        "Active",
-        "Class Group",
-        "Course",
-        "Department",
-        "Date Enrolled (Class)",   # dd/mm/yy
-        "User Date Joined",        # dd/mm/yy
-        "Emergency Name",
-        "Emergency Relation",
-        "Emergency Phone",
-        "Parent Names",
-        "Parent Roles",
-        "Parent Phones",
-        "Parent Emails",
-    ])
+    writer.writerow(
+        [
+            "Full Name",
+            "Email",
+            "IC Number",
+            "Phone",
+            "Active",
+            "Class Group",
+            "Course",
+            "Department",
+            "Date Enrolled (Class)",  # dd/mm/yy
+            "User Date Joined",  # dd/mm/yy
+            "Emergency Name",
+            "Emergency Relation",
+            "Emergency Phone",
+            "Parent Names",
+            "Parent Roles",
+            "Parent Phones",
+            "Parent Emails",
+        ]
+    )
 
     # Date format required
     dfmt = "%d/%m/%y"
@@ -818,28 +943,32 @@ def export_class_students(request, classgroup_id):
         parents = list(stu.parents.all())
 
         parent_names = "; ".join(filter(None, [p.full_name for p in parents]))
-        parent_roles = "; ".join(filter(None, [", ".join(p.get_roles_list()) for p in parents]))
+        parent_roles = "; ".join(
+            filter(None, [", ".join(p.get_roles_list()) for p in parents])
+        )
         parent_phones = "; ".join(filter(None, [p.phone_number for p in parents]))
         parent_emails = "; ".join(filter(None, [p.email for p in parents]))
 
-        writer.writerow([
-            u.get_full_name(),
-            u.email,
-            u.identity_card_number,
-            u.phone_number or "",
-            "Yes" if u.is_active else "No",
-            classgroup.name,
-            classgroup.course.name if classgroup.course else "",
-            classgroup.department.name if classgroup.department else "",
-            e.date_enrolled.strftime(dfmt) if e.date_enrolled else "",
-            u.date_joined.strftime(dfmt) if u.date_joined else "",
-            stu.emergency_name or "",
-            stu.emergency_relation or "",
-            stu.emergency_phone or "",
-            parent_names,
-            parent_roles,
-            parent_phones,
-            parent_emails,
-        ])
+        writer.writerow(
+            [
+                u.get_full_name(),
+                u.email,
+                u.identity_card_number,
+                u.phone_number or "",
+                "Yes" if u.is_active else "No",
+                classgroup.name,
+                classgroup.course.name if classgroup.course else "",
+                classgroup.department.name if classgroup.department else "",
+                e.date_enrolled.strftime(dfmt) if e.date_enrolled else "",
+                u.date_joined.strftime(dfmt) if u.date_joined else "",
+                stu.emergency_name or "",
+                stu.emergency_relation or "",
+                stu.emergency_phone or "",
+                parent_names,
+                parent_roles,
+                parent_phones,
+                parent_emails,
+            ]
+        )
 
     return response
