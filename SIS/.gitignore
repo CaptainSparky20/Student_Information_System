@@ -36,7 +36,7 @@ db.sqlite3-journal
 # ───── Static & Media ────────────────────────────────────────
 /staticfiles/           # Collected static (for prod)
 /media/                 # User uploads
-
+/media/profile_pics/
 # ───── Node / Frontend (if used for Tailwind build) ──────────
 node_modules/
 npm-debug.log*
