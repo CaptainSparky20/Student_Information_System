@@ -1,6 +1,20 @@
 from django import forms
 from accounts.models import CustomUser
-from core.models import Department, Student, Course, ClassGroup, Lecturer, ClassGroup, Subject, StudentFeePlan, StudentFeeInstallment
+from core.models import (
+    Department, Student, Course, ClassGroup, Lecturer, Subject,
+    StudentFeePlan, StudentFeeInstallment
+)
+
+# A single place to control select styling (white bg + black text)
+SELECT_WHITE_ATTRS = {
+    "class": "w-full border border-gray-300 rounded px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-600",
+    "style": "background-color:#fff; color:#000;",
+}
+SELECT_WHITE_SMALL_ATTRS = {
+    "class": "w-full p-2 rounded border border-gray-300 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-600",
+    "style": "background-color:#fff; color:#000;",
+}
+
 
 # ---------- LECTURER CREATION FORM ----------
 class LecturerCreationForm(forms.ModelForm):
@@ -24,12 +38,13 @@ class LecturerCreationForm(forms.ModelForm):
         queryset=Department.objects.all(),
         required=True,
         empty_label="Select Department",
-        widget=forms.Select(attrs={
-            'class': 'w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600',
-        })
+        widget=forms.Select(attrs=SELECT_WHITE_ATTRS)
     )
     date_joined = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600'}),
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600'
+        }),
         required=True
     )
 
@@ -89,6 +104,7 @@ class LecturerCreationForm(forms.ModelForm):
             user.save()
         return user
 
+
 # ---------- STUDENT UPDATE FORM ----------
 class StudentUpdateForm(forms.ModelForm):
     class Meta:
@@ -98,8 +114,9 @@ class StudentUpdateForm(forms.ModelForm):
             'full_name': forms.TextInput(attrs={'class': 'form-input'}),
             'short_name': forms.TextInput(attrs={'class': 'form-input'}),
             'email': forms.EmailInput(attrs={'class': 'form-input'}),
-            'department': forms.Select(attrs={'class': 'form-select'}),
+            'department': forms.Select(attrs=SELECT_WHITE_ATTRS),
         }
+
 
 # ---------- STUDENT PROFILE FORM ----------
 class StudentProfileUpdateForm(forms.ModelForm):
@@ -112,11 +129,12 @@ class StudentProfileUpdateForm(forms.ModelForm):
             'date_of_birth': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
         }
 
+
 # ---------- ASSIGN LECTURERS TO CLASSGROUP FORM (ManyToMany) ----------
 class AssignLecturersToClassGroupForm(forms.ModelForm):
     lecturers = forms.ModelMultipleChoiceField(
         queryset=Lecturer.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
+        widget=forms.CheckboxSelectMultiple,  # checkbox list is already visible
         required=False,
         label="Lecturers"
     )
@@ -124,6 +142,7 @@ class AssignLecturersToClassGroupForm(forms.ModelForm):
     class Meta:
         model = ClassGroup
         fields = ['lecturers']
+
 
 # ---------- ADD/EDIT COURSE FORM ----------
 class CourseForm(forms.ModelForm):
@@ -139,14 +158,13 @@ class CourseForm(forms.ModelForm):
                 'class': 'w-full p-2 rounded bg-white/10 text-white border border-white/20',
                 'placeholder': 'Course code',
             }),
-            'department': forms.Select(attrs={
-                'class': 'w-full p-2 rounded bg-white/10 text-white border border-white/20',
-            }),
+            'department': forms.Select(attrs=SELECT_WHITE_SMALL_ATTRS),
             'description': forms.Textarea(attrs={
                 'class': 'w-full p-2 rounded bg-white/10 text-white border border-white/20',
                 'placeholder': 'Course description (optional)',
             }),
         }
+
 
 # ---------- ADD/EDIT DEPARTMENT FORM ----------
 class DepartmentForm(forms.ModelForm):
@@ -160,6 +178,7 @@ class DepartmentForm(forms.ModelForm):
             }),
         }
 
+
 # ---------- ADD STUDENT FORM ----------
 class AddStudentForm(forms.Form):
     base_input_class = (
@@ -168,13 +187,14 @@ class AddStudentForm(forms.Form):
         'text-white border border-white/20 '
         'placeholder-white/70 '
         'focus:ring-2 focus:ring-blue-400 focus:outline-none transition'
-)
+    )
+    # Updated: white background + black text for all dropdowns
     base_select_class = (
-    'w-full px-4 py-3 rounded-lg '
-    'bg-white/10 backdrop-blur '
-    'text-white font-medium border border-white/20 '
-    'focus:ring-2 focus:ring-blue-400 focus:outline-none transition'
-)
+        'w-full px-4 py-3 rounded-lg '
+        'bg-white text-black '
+        'font-medium border border-gray-300 '
+        'focus:ring-2 focus:ring-blue-400 focus:outline-none transition'
+    )
 
     full_name = forms.CharField(
         max_length=100,
@@ -225,20 +245,15 @@ class AddStudentForm(forms.Form):
         required=False
     )
     department = forms.ModelChoiceField(
-    queryset=Department.objects.all(),
-    label="Department",
-    widget=forms.Select(attrs={
-        'class': base_select_class
-    })
-)
-
+        queryset=Department.objects.all(),
+        label="Department",
+        widget=forms.Select(attrs={**SELECT_WHITE_ATTRS, "class": base_select_class, "style": "background-color:#fff; color:#000;"})
+    )
     class_group = forms.ModelChoiceField(
         queryset=ClassGroup.objects.all(),
         label="Assign to Class Group",
-        widget=forms.Select(attrs={
-            'class': base_select_class
-    })
-)
+        widget=forms.Select(attrs={**SELECT_WHITE_ATTRS, "class": base_select_class, "style": "background-color:#fff; color:#000;"})
+    )
     profile_picture = forms.ImageField(
         required=False,
         label="Profile Picture",
@@ -303,22 +318,29 @@ class AddStudentForm(forms.Form):
         return cleaned_data
 
 
-
-
 # ---------- CLASS GROUP FORM ----------
 class ClassGroupForm(forms.ModelForm):
     class Meta:
         model = ClassGroup
         fields = ['name', 'course', 'department', 'year', 'classroom', 'lecturers']
+        widgets = {
+            'course': forms.Select(attrs=SELECT_WHITE_ATTRS),
+            'department': forms.Select(attrs=SELECT_WHITE_ATTRS),
+            'lecturers': forms.SelectMultiple(attrs={
+                **SELECT_WHITE_ATTRS,
+                "class": SELECT_WHITE_ATTRS["class"] + " min-h-[6rem]"
+            }),
+        }
+
 
 # ---------- SUBJECT FORM ----------
 class SubjectForm(forms.ModelForm):
     class Meta:
         model = Subject
         fields = ['name', 'code', 'course', 'description']
-
-
-
+        widgets = {
+            'course': forms.Select(attrs=SELECT_WHITE_ATTRS),
+        }
 
 
 class CustomUserCreationForm(forms.ModelForm):
@@ -367,9 +389,7 @@ class CustomUserCreationForm(forms.ModelForm):
             'phone_number': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500'
             }),
-            'department': forms.Select(attrs={
-                'class': 'w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white focus:ring-2 focus:ring-blue-500'
-            }),
+            'department': forms.Select(attrs=SELECT_WHITE_ATTRS),  # changed to white bg + black text
             'date_joined': forms.DateInput(attrs={
                 'type': 'date',
                 'class': 'w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white focus:ring-2 focus:ring-blue-500'
@@ -411,14 +431,17 @@ class CustomUserCreationForm(forms.ModelForm):
         return user
 
 
-# ---------- STUDENT FEE PLAN FORM ----------
+# ---------- STUDENT FEE PLAN FORMS ----------
 class FeePlanCreateForm(forms.ModelForm):
     class Meta:
         model = StudentFeePlan
         fields = ["student", "description", "total_amount", "months", "start_date", "status"]
         widgets = {
-            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "student": forms.Select(attrs=SELECT_WHITE_ATTRS),
+            "status": forms.Select(attrs=SELECT_WHITE_ATTRS),
+            "start_date": forms.DateInput(attrs={"type": "date", "class": "w-full border border-gray-300 rounded px-4 py-2"}),
         }
+
 
 class FeePlanCreateForStudentForm(forms.ModelForm):
     """Same as above, but 'student' is fixed and hidden."""
@@ -426,13 +449,15 @@ class FeePlanCreateForStudentForm(forms.ModelForm):
         model = StudentFeePlan
         fields = ["description", "total_amount", "months", "start_date", "status"]
         widgets = {
-            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "status": forms.Select(attrs=SELECT_WHITE_ATTRS),
+            "start_date": forms.DateInput(attrs={"type": "date", "class": "w-full border border-gray-300 rounded px-4 py-2"}),
         }
+
 
 class InstallmentUpdateForm(forms.ModelForm):
     class Meta:
         model = StudentFeeInstallment
         fields = ["is_paid", "paid_date", "note"]
         widgets = {
-            "paid_date": forms.DateInput(attrs={"type": "date"}),
+            "paid_date": forms.DateInput(attrs={"type": "date", "class": "w-full border border-gray-300 rounded px-4 py-2"}),
         }
