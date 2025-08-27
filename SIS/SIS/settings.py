@@ -93,26 +93,25 @@ USE_TZ = True
 
 # ── Static files (WhiteNoise) ──────────────────────────────────────────────────
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]              # your app's source static/
+STATICFILES_DIRS = [BASE_DIR / "static"]              # your app's static/
 STATIC_ROOT = BASE_DIR / "staticfiles"                # collected static (prod)
-
-# While stabilising, avoid hard 500s if a file is missing from the manifest.
-# Remove or set to True once collectstatic is clean and paths are correct.
-WHITENOISE_MANIFEST_STRICT = False
 
 # ── Media (user uploads) ───────────────────────────────────────────────────────
 MEDIA_URL = "/media/"
-MEDIA_ROOT = (BASE_DIR / "media") if not os.environ.get("RENDER") else "/var/media"
+if os.environ.get("RENDER"):
+    MEDIA_ROOT = "/var/media"                         # attach Render disk here
+else:
+    MEDIA_ROOT = BASE_DIR / "media"
 
 # ── Storages (Django 5+) ───────────────────────────────────────────────────────
-# Provide BOTH 'default' (MEDIA) and 'staticfiles' (STATIC).
+# Provide BOTH 'default' (for MEDIA) and 'staticfiles' (for STATIC).
 STORAGES = {
     # Media storage: local filesystem
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
         # "OPTIONS": {"location": MEDIA_ROOT, "base_url": MEDIA_URL},  # optional
     },
-    # Static storage: WhiteNoise (manifest in prod; non-manifest in dev)
+    # Static storage: WhiteNoise
     "staticfiles": {
         "BACKEND": (
             "whitenoise.storage.CompressedStaticFilesStorage" if DEBUG
@@ -120,10 +119,6 @@ STORAGES = {
         )
     },
 }
-
-# Optional: longer cache for static assets in prod (WhiteNoise)
-if not DEBUG:
-    WHITENOISE_MAX_AGE = 31536000  # 1 year, adjust to taste
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
